@@ -20,6 +20,7 @@ import { LibraryPage } from '../pages/LibraryPage';
 import { LeaveManagementPage } from '../pages/LeaveManagementPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { DocumentsPage } from '../pages/DocumentsPage';
+import { AuditLogsPage } from '../pages/AuditLogsPage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { RoleGuard } from '../components/common/RoleGuard';
 
@@ -246,7 +247,7 @@ export const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <RoleGuard allowedRoles={['SUPER_ADMIN']}>
-              <DashboardPage />
+              <AuditLogsPage />
             </RoleGuard>
           </ProtectedRoute>
         }
