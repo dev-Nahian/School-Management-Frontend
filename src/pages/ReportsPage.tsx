@@ -20,6 +20,8 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
+import { Breadcrumbs } from '../components/ui/Breadcrumbs';
+
 export const ReportsPage: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'STUDENT' | 'ATTENDANCE' | 'FINANCE' | 'ACADEMIC'>('STUDENT');
@@ -121,6 +123,10 @@ export const ReportsPage: React.FC = () => {
       </div>
 
       <div className="flex-1 space-y-6">
+        <div className="print:hidden">
+          <Breadcrumbs />
+        </div>
+
         {/* Banner */}
         <div className="glass-panel p-6 rounded-3xl border border-indigo-500/20 bg-gradient-to-r from-indigo-950/40 via-gray-900/60 to-purple-950/40 print:border-none print:bg-none print:p-0">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

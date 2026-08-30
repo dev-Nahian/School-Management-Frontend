@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -15,6 +15,9 @@ import {
   ShieldCheck,
   Lock,
   School,
+  Menu,
+  X,
+  FileText,
 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import type { UserRole } from '../../types';
@@ -82,6 +85,12 @@ const navItems: NavItem[] = [
     roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT'],
   },
   {
+    title: 'Reports Center',
+    href: '/reports',
+    icon: FileText,
+    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE'],
+  },
+  {
     title: 'Document Vault',
     href: '/documents',
     icon: ShieldCheck,
@@ -103,12 +112,14 @@ const navItems: NavItem[] = [
 
 export const Sidebar: React.FC = () => {
   const { user } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+
   if (!user) return null;
 
   const allowedNav = navItems.filter((item) => item.roles.includes(user.role));
 
-  return (
-    <aside className="w-64 glass-panel rounded-3xl p-4 flex flex-col justify-between min-h-[calc(100vh-140px)] border border-gray-800">
+  const renderNavContent = () => (
+    <div className="flex flex-col justify-between h-full space-y-6">
       <div className="space-y-6">
         {/* Role Scope Header */}
         <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-between">
@@ -121,7 +132,7 @@ export const Sidebar: React.FC = () => {
           </Badge>
         </div>
 
-        {/* Navigation Section */}
+        {/* Navigation Links */}
         <div className="space-y-1">
           <p className="px-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
             Authorized Modules
@@ -132,6 +143,7 @@ export const Sidebar: React.FC = () => {
               <NavLink
                 key={item.href}
                 to={item.href}
+                onClick={() => setIsOpen(false)}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
                     isActive
@@ -151,8 +163,48 @@ export const Sidebar: React.FC = () => {
       {/* Security Note Footer */}
       <div className="p-3 rounded-2xl bg-gray-900/60 border border-gray-800 text-[11px] text-gray-400 flex items-start gap-2">
         <Lock className="h-3.5 w-3.5 text-purple-400 shrink-0 mt-0.5" />
-        <span>JWT Bearer Sessions active. Unpermitted module routes are strictly blocked by backend RBAC middleware.</span>
+        <span>JWT Bearer Sessions active. Unpermitted module routes are strictly blocked.</span>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Mobile Drawer Trigger Button */}
+      <div className="lg:hidden flex items-center justify-between p-4 glass-panel rounded-2xl border border-gray-800 mb-4">
+        <div className="flex items-center gap-2">
+          <Badge variant="purple" className="text-[10px]">
+            {user.role}
+          </Badge>
+          <span className="text-xs font-bold text-white">Platform Navigation</span>
+        </div>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="p-2 text-gray-300 hover:text-white bg-gray-800/60 rounded-xl"
+        >
+          {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+      </div>
+
+      {/* Mobile Overlay Drawer */}
+      {isOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="glass-panel w-full max-w-xs h-full p-4 rounded-3xl border border-gray-800 bg-gray-900 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-800">
+              <span className="text-sm font-bold text-white">Menu Navigation</span>
+              <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {renderNavContent()}
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar (hidden on mobile/tablet) */}
+      <aside className="hidden lg:flex w-64 glass-panel rounded-3xl p-4 flex-col justify-between min-h-[calc(100vh-140px)] border border-gray-800 shrink-0">
+        {renderNavContent()}
+      </aside>
+    </>
   );
 };

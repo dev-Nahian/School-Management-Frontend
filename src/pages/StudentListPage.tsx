@@ -20,6 +20,8 @@ import {
   X,
   FileSpreadsheet,
 } from 'lucide-react';
+import { Breadcrumbs } from '../components/ui/Breadcrumbs';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import type { StudentStatus, CreateStudentInput } from '../types/student';
 
 export const StudentListPage: React.FC = () => {
@@ -36,8 +38,10 @@ export const StudentListPage: React.FC = () => {
   const [sortOrder] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
 
-  // Modal State
+  // Modal & Confirm Dialog State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
   const [newStudent, setNewStudent] = useState<CreateStudentInput>({
     firstName: '',
     lastName: '',
@@ -102,6 +106,7 @@ export const StudentListPage: React.FC = () => {
     mutationFn: studentService.deleteStudent,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
+      setDeleteTargetId(null);
     },
   });
 
@@ -152,6 +157,8 @@ export const StudentListPage: React.FC = () => {
       <Sidebar />
 
       <div className="flex-1 space-y-6">
+        <Breadcrumbs />
+
         {/* Header Banner */}
         <div className="glass-panel p-6 rounded-3xl border border-purple-500/20 bg-gradient-to-r from-purple-900/30 via-gray-900/40 to-indigo-900/20 print:hidden">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -352,7 +359,7 @@ export const StudentListPage: React.FC = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => deleteStudentMutation.mutate(st.id)}
+                                onClick={() => setDeleteTargetId(st.id)}
                                 className="h-7 px-2 text-[10px] text-red-400 hover:text-red-300"
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -509,6 +516,18 @@ export const StudentListPage: React.FC = () => {
           </div>
         </div>
       )}
+      {/* CONFIRMATION DIALOG FOR DESTRUCTIVE DELETE */}
+      <ConfirmDialog
+        isOpen={!!deleteTargetId}
+        title="Delete Student Record?"
+        message="Are you sure you want to permanently delete this student record? All related attendance and result associations will be removed."
+        confirmLabel="Yes, Delete Student"
+        cancelLabel="Cancel"
+        variant="danger"
+        isLoading={deleteStudentMutation.isPending}
+        onConfirm={() => deleteTargetId && deleteStudentMutation.mutate(deleteTargetId)}
+        onCancel={() => setDeleteTargetId(null)}
+      />
     </div>
   );
 };

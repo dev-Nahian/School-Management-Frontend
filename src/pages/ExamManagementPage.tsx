@@ -21,6 +21,7 @@ import {
   GraduationCap,
   Save,
 } from 'lucide-react';
+import { Breadcrumbs } from '../components/ui/Breadcrumbs';
 import type { ReportCardResponse } from '../services/exam.service';
 
 export const ExamManagementPage: React.FC = () => {
@@ -207,6 +208,8 @@ export const ExamManagementPage: React.FC = () => {
       <Sidebar />
 
       <div className="flex-1 space-y-6">
+        <Breadcrumbs />
+
         {/* Banner */}
         <div className="glass-panel p-6 rounded-3xl border border-purple-500/20 bg-gradient-to-r from-indigo-950/40 via-gray-900/60 to-purple-950/40">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

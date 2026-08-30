@@ -19,6 +19,7 @@ import {
   GraduationCap,
   TrendingUp,
 } from 'lucide-react';
+import { Breadcrumbs } from '../components/ui/Breadcrumbs';
 import type { AttendanceStatusType } from '../services/attendance.service';
 
 export const AttendancePage: React.FC = () => {
@@ -110,6 +111,8 @@ export const AttendancePage: React.FC = () => {
       <Sidebar />
 
       <div className="flex-1 space-y-6">
+        <Breadcrumbs />
+
         {/* Banner */}
         <div className="glass-panel p-6 rounded-3xl border border-purple-500/20 bg-gradient-to-r from-purple-900/30 via-gray-900/40 to-indigo-900/20">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

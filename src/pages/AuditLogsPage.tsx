@@ -17,6 +17,8 @@ import {
   Activity,
 } from 'lucide-react';
 
+import { Breadcrumbs } from '../components/ui/Breadcrumbs';
+
 export const AuditLogsPage: React.FC = () => {
   const { user } = useAuth();
   const [actionQuery, setActionQuery] = useState<string>('');
@@ -51,6 +53,8 @@ export const AuditLogsPage: React.FC = () => {
       <Sidebar />
 
       <div className="flex-1 space-y-6">
+        <Breadcrumbs />
+
         {/* Header Banner */}
         <div className="glass-panel p-6 rounded-3xl border border-rose-500/20 bg-gradient-to-r from-rose-950/30 via-gray-900/60 to-purple-950/30">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

@@ -19,6 +19,8 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 
+import { Breadcrumbs } from '../components/ui/Breadcrumbs';
+
 export const DocumentsPage: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -106,6 +108,8 @@ export const DocumentsPage: React.FC = () => {
       <Sidebar />
 
       <div className="flex-1 space-y-6">
+        <Breadcrumbs />
+
         {/* Header */}
         <div className="glass-panel p-6 rounded-3xl border border-purple-500/20 bg-gradient-to-r from-purple-950/40 via-gray-900/60 to-indigo-950/40">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
