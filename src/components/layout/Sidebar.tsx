@@ -82,6 +82,12 @@ const navItems: NavItem[] = [
     roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT'],
   },
   {
+    title: 'Document Vault',
+    href: '/documents',
+    icon: ShieldCheck,
+    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE', 'STUDENT', 'PARENT'],
+  },
+  {
     title: 'System Audit Logs',
     href: '/audit-logs',
     icon: Activity,
