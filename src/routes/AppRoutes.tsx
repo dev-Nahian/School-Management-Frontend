@@ -16,6 +16,7 @@ import { ChangePasswordPage } from '../pages/ChangePasswordPage';
 import { AssignmentPage } from '../pages/AssignmentPage';
 import { TimetablePage } from '../pages/TimetablePage';
 import { AnnouncementPage } from '../pages/AnnouncementPage';
+import { LibraryPage } from '../pages/LibraryPage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { RoleGuard } from '../components/common/RoleGuard';
 
@@ -183,6 +184,18 @@ export const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <RoleGuard allowedRoles={['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE', 'STUDENT', 'PARENT']}>
               <AnnouncementPage />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Library & Borrowing Management */}
+      <Route
+        path="/library"
+        element={
+          <ProtectedRoute>
+            <RoleGuard allowedRoles={['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT']}>
+              <LibraryPage />
             </RoleGuard>
           </ProtectedRoute>
         }
