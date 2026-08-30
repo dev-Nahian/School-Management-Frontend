@@ -14,6 +14,7 @@ import { ExamManagementPage } from '../pages/ExamManagementPage';
 import { UnauthorizedPage } from '../pages/UnauthorizedPage';
 import { ChangePasswordPage } from '../pages/ChangePasswordPage';
 import { AssignmentPage } from '../pages/AssignmentPage';
+import { TimetablePage } from '../pages/TimetablePage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { RoleGuard } from '../components/common/RoleGuard';
 
@@ -157,6 +158,18 @@ export const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <RoleGuard allowedRoles={['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT']}>
               <AssignmentPage />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Timetable Management */}
+      <Route
+        path="/timetable"
+        element={
+          <ProtectedRoute>
+            <RoleGuard allowedRoles={['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT']}>
+              <TimetablePage />
             </RoleGuard>
           </ProtectedRoute>
         }
