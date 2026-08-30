@@ -1,9 +1,11 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sidebar } from '../components/layout/Sidebar';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
 import { dashboardService } from '../services/dashboard.service';
 import {
   Users,
@@ -11,10 +13,15 @@ import {
   GraduationCap,
   Sparkles,
   TrendingUp,
-  DollarSign,
-  Calendar,
-  Bell,
   BarChart3,
+  UserPlus,
+  FileCheck,
+  ClipboardList,
+  Plus,
+  BookOpen,
+  Award,
+  CreditCard,
+  HeartHandshake,
 } from 'lucide-react';
 import {
   BarChart,
@@ -32,11 +39,43 @@ const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444'];
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const { data: dashboard, isLoading } = useQuery({
+  // Queries for each role
+  const { data: superAdminData } = useQuery({
     queryKey: ['superAdminDashboard'],
     queryFn: dashboardService.getSuperAdminDashboard,
     enabled: user?.role === 'SUPER_ADMIN',
+  });
+
+  const { data: admissionData } = useQuery({
+    queryKey: ['admissionAdminDashboard'],
+    queryFn: dashboardService.getAdmissionAdminDashboard,
+    enabled: user?.role === 'ADMISSION_ADMIN',
+  });
+
+  const { data: teacherData } = useQuery({
+    queryKey: ['teacherDashboard'],
+    queryFn: dashboardService.getTeacherDashboard,
+    enabled: user?.role === 'TEACHER',
+  });
+
+  const { data: financeData } = useQuery({
+    queryKey: ['financeDashboard'],
+    queryFn: dashboardService.getFinanceDashboard,
+    enabled: user?.role === 'FINANCE',
+  });
+
+  const { data: studentData } = useQuery({
+    queryKey: ['studentDashboard'],
+    queryFn: dashboardService.getStudentDashboard,
+    enabled: user?.role === 'STUDENT',
+  });
+
+  const { data: parentData } = useQuery({
+    queryKey: ['parentDashboard'],
+    queryFn: dashboardService.getParentDashboard,
+    enabled: user?.role === 'PARENT',
   });
 
   if (!user) return null;
@@ -51,326 +90,344 @@ export const DashboardPage: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <Badge variant="purple" className="mb-2 gap-1.5 font-mono">
-                <Sparkles className="h-3.5 w-3.5 text-purple-400" /> Phase 17 Super Admin Command Center
+                <Sparkles className="h-3.5 w-3.5 text-purple-400" /> Active Role: {user.role}
               </Badge>
               <h2 className="text-2xl font-extrabold text-white">
                 Welcome back, {user.firstName} {user.lastName}!
               </h2>
               <p className="text-xs text-gray-400 mt-1">
-                Real-time school performance, student enrollment, fee collections, attendance, and academic metrics.
+                Your role-tailored dashboard with live metrics, quick actions, and relevant notices.
               </p>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs text-emerald-400 font-semibold font-mono">Database Connected</span>
+              <span className="text-xs text-emerald-400 font-semibold font-mono">Live Database Session</span>
             </div>
           </div>
         </div>
 
-        {/* 1. School Overview Stat Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="border-gray-800 bg-gray-900/50 hover:border-blue-500/30 transition-all">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-400 font-medium">Total Students</p>
-                <h3 className="text-2xl font-extrabold text-white mt-1">
-                  {isLoading ? '...' : dashboard?.overview?.totalStudents || 0}
-                </h3>
-                <span className="text-[10px] text-emerald-400 flex items-center gap-1 mt-1 font-mono">
-                  <TrendingUp className="h-3 w-3" /> Active Profile Record
-                </span>
-              </div>
-              <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                <Users className="h-6 w-6" />
-              </div>
-            </CardContent>
-          </Card>
+        {/* 1. SUPER ADMIN DASHBOARD VIEW */}
+        {user.role === 'SUPER_ADMIN' && superAdminData && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium">Total Students</p>
+                    <h3 className="text-2xl font-extrabold text-white mt-1">{superAdminData.overview?.totalStudents}</h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-400"><Users className="h-6 w-6" /></div>
+                </CardContent>
+              </Card>
 
-          <Card className="border-gray-800 bg-gray-900/50 hover:border-purple-500/30 transition-all">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-400 font-medium">Total Teachers</p>
-                <h3 className="text-2xl font-extrabold text-white mt-1">
-                  {isLoading ? '...' : dashboard?.overview?.totalTeachers || 0}
-                </h3>
-                <span className="text-[10px] text-purple-400 flex items-center gap-1 mt-1 font-mono">
-                  <UserCheck className="h-3 w-3" /> Assigned Staff
-                </span>
-              </div>
-              <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                <UserCheck className="h-6 w-6" />
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium">Total Teachers</p>
+                    <h3 className="text-2xl font-extrabold text-white mt-1">{superAdminData.overview?.totalTeachers}</h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-400"><UserCheck className="h-6 w-6" /></div>
+                </CardContent>
+              </Card>
 
-          <Card className="border-gray-800 bg-gray-900/50 hover:border-emerald-500/30 transition-all">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-400 font-medium">Total Classes</p>
-                <h3 className="text-2xl font-extrabold text-white mt-1">
-                  {isLoading ? '...' : dashboard?.overview?.totalClasses || 0}
-                </h3>
-                <span className="text-[10px] text-emerald-400 flex items-center gap-1 mt-1 font-mono">
-                  <GraduationCap className="h-3 w-3" /> Active Grades
-                </span>
-              </div>
-              <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <GraduationCap className="h-6 w-6" />
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium">Total Classes</p>
+                    <h3 className="text-2xl font-extrabold text-white mt-1">{superAdminData.overview?.totalClasses}</h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400"><GraduationCap className="h-6 w-6" /></div>
+                </CardContent>
+              </Card>
 
-          <Card className="border-gray-800 bg-gray-900/50 hover:border-amber-500/30 transition-all">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-400 font-medium">New Admissions</p>
-                <h3 className="text-2xl font-extrabold text-white mt-1">
-                  {isLoading ? '...' : dashboard?.overview?.newAdmissions || 0}
-                </h3>
-                <span className="text-[10px] text-amber-400 flex items-center gap-1 mt-1 font-mono">
-                  <Sparkles className="h-3 w-3" /> Last 30 Days
-                </span>
-              </div>
-              <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                <Sparkles className="h-6 w-6" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium">New Admissions</p>
+                    <h3 className="text-2xl font-extrabold text-white mt-1">{superAdminData.overview?.newAdmissions}</h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400"><Sparkles className="h-6 w-6" /></div>
+                </CardContent>
+              </Card>
+            </div>
 
-        {/* 2. Attendance & Finance Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Attendance Overview Card */}
-          <Card className="border-gray-800 bg-gray-900/50">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-emerald-400" /> Attendance Overview Summary
-                </CardTitle>
-                <Badge variant="success" className="font-mono text-[10px]">
-                  {dashboard?.attendance?.percentage || 100}% Average Rate
-                </Badge>
-              </div>
-              <CardDescription className="text-xs text-gray-400">
-                School-wide student attendance breakdown.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="p-3 rounded-2xl bg-emerald-950/30 border border-emerald-500/20">
-                  <p className="text-[10px] text-gray-400">Present</p>
-                  <h4 className="text-lg font-bold text-emerald-400 mt-0.5">
-                    {dashboard?.attendance?.present || 0}
-                  </h4>
-                </div>
-                <div className="p-3 rounded-2xl bg-rose-950/30 border border-rose-500/20">
-                  <p className="text-[10px] text-gray-400">Absent</p>
-                  <h4 className="text-lg font-bold text-rose-400 mt-0.5">
-                    {dashboard?.attendance?.absent || 0}
-                  </h4>
-                </div>
-                <div className="p-3 rounded-2xl bg-amber-950/30 border border-amber-500/20">
-                  <p className="text-[10px] text-gray-400">Late</p>
-                  <h4 className="text-lg font-bold text-amber-400 mt-0.5">
-                    {dashboard?.attendance?.late || 0}
-                  </h4>
-                </div>
-              </div>
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="border-gray-800 bg-gray-900/50 lg:col-span-2">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-blue-400" /> Class Enrolled Student Distribution
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="h-64 pt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={superAdminData.chartData?.classDistribution || []}>
+                      <XAxis dataKey="name" stroke="#6b7280" fontSize={11} />
+                      <YAxis stroke="#6b7280" fontSize={11} />
+                      <Tooltip contentStyle={{ backgroundColor: '#090d16', borderColor: '#1f2937', borderRadius: '12px' }} />
+                      <Bar dataKey="students" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
 
-              {/* Attendance Bar Track */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[11px] font-mono text-gray-400">
-                  <span>Overall Attendance Ratio</span>
-                  <span className="text-emerald-400 font-bold">{dashboard?.attendance?.percentage || 100}%</span>
-                </div>
-                <div className="w-full h-2.5 rounded-full bg-gray-800 overflow-hidden flex">
-                  <div
-                    style={{ width: `${dashboard?.attendance?.percentage || 100}%` }}
-                    className="bg-emerald-500 h-full rounded-full transition-all"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4 text-purple-400" /> Academic Grade Distribution
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="h-64 pt-2 flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={superAdminData.chartData?.gradeDistribution || []}
+                        dataKey="count"
+                        nameKey="grade"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={75}
+                        label={({ name, value }: any) => `${name} (${value})`}
+                      >
+                        {(superAdminData.chartData?.gradeDistribution || []).map((_: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={{ backgroundColor: '#090d16', borderColor: '#1f2937', borderRadius: '12px' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
 
-          {/* Finance Overview Card */}
-          <Card className="border-gray-800 bg-gray-900/50">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-amber-400" /> Finance & Revenue Overview
-                </CardTitle>
-                <Badge variant="warning" className="font-mono text-[10px]">
-                  Real-time Ledger
-                </Badge>
-              </div>
-              <CardDescription className="text-xs text-gray-400">
-                Invoiced fee receivables vs collection totals.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                <div className="p-3 rounded-2xl bg-gray-950 border border-gray-800">
-                  <p className="text-[10px] text-gray-400">Expected</p>
-                  <h4 className="text-sm font-bold text-white mt-0.5 font-mono">
-                    ৳{dashboard?.finance?.expected?.toLocaleString() || 0}
-                  </h4>
-                </div>
+        {/* 2. ADMISSION ADMIN DASHBOARD VIEW */}
+        {user.role === 'ADMISSION_ADMIN' && admissionData && (
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <div className="flex items-center gap-3">
+              <Button size="sm" onClick={() => navigate('/admissions')} className="gap-1.5 text-xs bg-purple-600 hover:bg-purple-500">
+                <UserPlus className="h-4 w-4" /> New Student Admission
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate('/students')} className="gap-1.5 text-xs">
+                <Users className="h-4 w-4 text-blue-400" /> View Students Directory
+              </Button>
+            </div>
 
-                <div className="p-3 rounded-2xl bg-emerald-950/30 border border-emerald-500/20">
-                  <p className="text-[10px] text-gray-400">Collected</p>
-                  <h4 className="text-sm font-bold text-emerald-400 mt-0.5 font-mono">
-                    ৳{dashboard?.finance?.collected?.toLocaleString() || 0}
-                  </h4>
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400">Today's Admissions</p>
+                    <h3 className="text-2xl font-bold text-white mt-1">{admissionData.todayAdmissions}</h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400"><UserPlus className="h-6 w-6" /></div>
+                </CardContent>
+              </Card>
 
-                <div className="p-3 rounded-2xl bg-amber-950/30 border border-amber-500/20">
-                  <p className="text-[10px] text-gray-400">Pending</p>
-                  <h4 className="text-sm font-bold text-amber-400 mt-0.5 font-mono">
-                    ৳{dashboard?.finance?.pending?.toLocaleString() || 0}
-                  </h4>
-                </div>
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400">Monthly Admissions</p>
+                    <h3 className="text-2xl font-bold text-white mt-1">{admissionData.monthAdmissions}</h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-400"><TrendingUp className="h-6 w-6" /></div>
+                </CardContent>
+              </Card>
 
-                <div className="p-3 rounded-2xl bg-rose-950/30 border border-rose-500/20">
-                  <p className="text-[10px] text-gray-400">Overdue</p>
-                  <h4 className="text-sm font-bold text-rose-400 mt-0.5 font-mono">
-                    ৳{dashboard?.finance?.overdue?.toLocaleString() || 0}
-                  </h4>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400">Inactive Profiles</p>
+                    <h3 className="text-2xl font-bold text-white mt-1">{admissionData.pendingApplications}</h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400"><FileCheck className="h-6 w-6" /></div>
+                </CardContent>
+              </Card>
+            </div>
 
-        {/* 3. Recharts Visualizations */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Class Enrolled Student Bar Chart */}
-          <Card className="border-gray-800 bg-gray-900/50 lg:col-span-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-blue-400" /> Class Distribution Analytics
-              </CardTitle>
-              <CardDescription className="text-xs text-gray-400">
-                Number of active enrolled students per grade.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-64 pt-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dashboard?.chartData?.classDistribution || []}>
-                  <XAxis dataKey="name" stroke="#6b7280" fontSize={11} />
-                  <YAxis stroke="#6b7280" fontSize={11} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#090d16', borderColor: '#1f2937', borderRadius: '12px' }}
-                    labelStyle={{ color: '#fff', fontWeight: 'bold' }}
-                  />
-                  <Bar dataKey="students" fill="#3b82f6" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Academic Grade Distribution Pie Chart */}
-          <Card className="border-gray-800 bg-gray-900/50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
-                <GraduationCap className="h-4 w-4 text-purple-400" /> Grade Distribution
-              </CardTitle>
-              <CardDescription className="text-xs text-gray-400">
-                Exam marks breakdown by letter grade.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-64 pt-2 flex items-center justify-center">
-              {dashboard?.chartData?.gradeDistribution?.length ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={dashboard?.chartData?.gradeDistribution}
-                      dataKey="count"
-                      nameKey="grade"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={75}
-                      label={({ name, value }: any) => `${name} (${value})`}
-                    >
-                      {dashboard?.chartData?.gradeDistribution.map((_: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#090d16', borderColor: '#1f2937', borderRadius: '12px' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-xs text-gray-500">No exam grade entries recorded yet.</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* 4. Academic Overview & Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Admissions & Payments Feed */}
-          <Card className="border-gray-800 bg-gray-900/50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-white flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-amber-400" /> Recent School Admissions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-gray-800 text-xs">
-                {dashboard?.recentActivity?.recentAdmissions?.length === 0 ? (
-                  <p className="p-4 text-center text-gray-500">No recent student admissions.</p>
-                ) : (
-                  dashboard?.recentActivity?.recentAdmissions?.map((student: any) => (
-                    <div key={student.id} className="p-3.5 flex items-center justify-between hover:bg-gray-800/30">
+            <Card className="border-gray-800 bg-gray-900/50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-white">Recent Student Admissions</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-gray-800 text-xs">
+                  {admissionData.recentAdmissions?.map((s: any) => (
+                    <div key={s.id} className="p-3 flex items-center justify-between">
                       <div>
-                        <p className="font-bold text-white">
-                          {student.firstName} {student.lastName}
-                        </p>
-                        <p className="text-[10px] text-gray-400 font-mono">
-                          ID: {student.studentId} • {student.class?.name} ({student.section?.name})
-                        </p>
+                        <p className="font-bold text-white">{s.firstName} {s.lastName}</p>
+                        <p className="text-[10px] text-gray-400 font-mono">ID: {s.studentId} • Class {s.class?.name}</p>
                       </div>
-                      <Badge variant="success" className="text-[10px] font-mono">
-                        {new Date(student.admissionDate).toLocaleDateString()}
-                      </Badge>
+                      <Badge variant="success" className="text-[10px]">{new Date(s.admissionDate).toLocaleDateString()}</Badge>
                     </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-          {/* Recent Announcements Feed */}
-          <Card className="border-gray-800 bg-gray-900/50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-white flex items-center gap-2">
-                <Bell className="h-4 w-4 text-purple-400" /> Broadcast Announcements
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-gray-800 text-xs">
-                {dashboard?.recentActivity?.recentAnnouncements?.length === 0 ? (
-                  <p className="p-4 text-center text-gray-500">No recent broadcast notices.</p>
-                ) : (
-                  dashboard?.recentActivity?.recentAnnouncements?.map((notice: any) => (
-                    <div key={notice.id} className="p-3.5 space-y-1 hover:bg-gray-800/30">
-                      <div className="flex items-center justify-between">
-                        <p className="font-bold text-white line-clamp-1">{notice.title}</p>
-                        <Badge variant="purple" className="text-[10px]">
-                          {notice.targetAudience}
-                        </Badge>
+        {/* 3. TEACHER DASHBOARD VIEW */}
+        {user.role === 'TEACHER' && teacherData && (
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <div className="flex items-center gap-3">
+              <Button size="sm" onClick={() => navigate('/attendance')} className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-500">
+                <ClipboardList className="h-4 w-4" /> Take Class Attendance
+              </Button>
+              <Button size="sm" onClick={() => navigate('/exams')} className="gap-1.5 text-xs bg-purple-600 hover:bg-purple-500">
+                <Award className="h-4 w-4" /> Enter Marks
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate('/assignments')} className="gap-1.5 text-xs">
+                <Plus className="h-4 w-4" /> Create Homework
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400">Assigned Sections</p>
+                    <h3 className="text-2xl font-bold text-white mt-1">{teacherData.assignedClasses}</h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-400"><BookOpen className="h-6 w-6" /></div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400">Assignments Created</p>
+                    <h3 className="text-2xl font-bold text-white mt-1">{teacherData.assignments?.length || 0}</h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-400"><ClipboardList className="h-6 w-6" /></div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400">Upcoming Exams</p>
+                    <h3 className="text-2xl font-bold text-white mt-1">{teacherData.upcomingExams?.length || 0}</h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400"><Award className="h-6 w-6" /></div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* 4. FINANCE DASHBOARD VIEW */}
+        {user.role === 'FINANCE' && financeData && (
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <div className="flex items-center gap-3">
+              <Button size="sm" onClick={() => navigate('/finance')} className="gap-1.5 text-xs bg-amber-600 hover:bg-amber-500">
+                <CreditCard className="h-4 w-4" /> Record Student Payment
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate('/finance')} className="gap-1.5 text-xs">
+                <Plus className="h-4 w-4" /> Create Invoice
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4">
+                  <p className="text-xs text-gray-400">Today's Collection</p>
+                  <h3 className="text-xl font-bold text-emerald-400 mt-1 font-mono">৳{financeData.todayCollection?.toLocaleString()}</h3>
+                </CardContent>
+              </Card>
+
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4">
+                  <p className="text-xs text-gray-400">Monthly Collection</p>
+                  <h3 className="text-xl font-bold text-blue-400 mt-1 font-mono">৳{financeData.monthCollection?.toLocaleString()}</h3>
+                </CardContent>
+              </Card>
+
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4">
+                  <p className="text-xs text-gray-400">Pending Balance</p>
+                  <h3 className="text-xl font-bold text-amber-400 mt-1 font-mono">৳{financeData.pendingTotal?.toLocaleString()}</h3>
+                </CardContent>
+              </Card>
+
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4">
+                  <p className="text-xs text-gray-400">Overdue Balance</p>
+                  <h3 className="text-xl font-bold text-rose-400 mt-1 font-mono">৳{financeData.overdueTotal?.toLocaleString()}</h3>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* 5. STUDENT DASHBOARD VIEW */}
+        {user.role === 'STUDENT' && studentData && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4 text-center">
+                  <p className="text-xs text-gray-400">Attendance Rate</p>
+                  <h3 className="text-2xl font-bold text-emerald-400 mt-1 font-mono">{studentData.attendancePercentage}%</h3>
+                </CardContent>
+              </Card>
+
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4 text-center">
+                  <p className="text-xs text-gray-400">Cumulative GPA</p>
+                  <h3 className="text-2xl font-bold text-purple-400 mt-1 font-mono">{studentData.gpa} / 5.0</h3>
+                </CardContent>
+              </Card>
+
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4 text-center">
+                  <p className="text-xs text-gray-400">Pending Homework</p>
+                  <h3 className="text-2xl font-bold text-blue-400 mt-1 font-mono">{studentData.assignments?.length || 0}</h3>
+                </CardContent>
+              </Card>
+
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardContent className="p-4 text-center">
+                  <p className="text-xs text-gray-400">Invoices</p>
+                  <h3 className="text-2xl font-bold text-amber-400 mt-1 font-mono">{studentData.invoices?.length || 0}</h3>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* 6. PARENT DASHBOARD VIEW */}
+        {user.role === 'PARENT' && parentData && (
+          <div className="space-y-6">
+            <Card className="border-gray-800 bg-gray-900/50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-white flex items-center gap-2">
+                  <HeartHandshake className="h-4 w-4 text-purple-400" /> Linked Children Profiles
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-gray-800 text-xs">
+                  {parentData.children?.length === 0 ? (
+                    <p className="p-4 text-center text-gray-500">No linked student profiles.</p>
+                  ) : (
+                    parentData.children?.map((child: any) => (
+                      <div key={child.id} className="p-4 flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-white">{child.firstName} {child.lastName}</p>
+                          <p className="text-[11px] text-purple-400 font-mono">ID: {child.studentId} • Class {child.class?.name} ({child.section?.name})</p>
+                        </div>
+                        <Badge variant="purple" className="text-[10px] font-mono">Active Student</Badge>
                       </div>
-                      <p className="text-gray-400 line-clamp-1 text-[11px]">{notice.description}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
