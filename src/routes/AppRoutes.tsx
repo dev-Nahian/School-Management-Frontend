@@ -13,6 +13,7 @@ import { FinancePage } from '../pages/FinancePage';
 import { ExamManagementPage } from '../pages/ExamManagementPage';
 import { UnauthorizedPage } from '../pages/UnauthorizedPage';
 import { ChangePasswordPage } from '../pages/ChangePasswordPage';
+import { AssignmentPage } from '../pages/AssignmentPage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { RoleGuard } from '../components/common/RoleGuard';
 
@@ -149,13 +150,13 @@ export const AppRoutes: React.FC = () => {
         }
       />
 
-      {/* Assignments */}
+      {/* Homework & Assignments */}
       <Route
         path="/assignments"
         element={
           <ProtectedRoute>
-            <RoleGuard allowedRoles={['SUPER_ADMIN', 'TEACHER', 'STUDENT']}>
-              <DashboardPage />
+            <RoleGuard allowedRoles={['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT']}>
+              <AssignmentPage />
             </RoleGuard>
           </ProtectedRoute>
         }
