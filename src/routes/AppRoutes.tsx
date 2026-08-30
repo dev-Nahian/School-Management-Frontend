@@ -18,6 +18,7 @@ import { TimetablePage } from '../pages/TimetablePage';
 import { AnnouncementPage } from '../pages/AnnouncementPage';
 import { LibraryPage } from '../pages/LibraryPage';
 import { LeaveManagementPage } from '../pages/LeaveManagementPage';
+import { ReportsPage } from '../pages/ReportsPage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { RoleGuard } from '../components/common/RoleGuard';
 
@@ -209,6 +210,18 @@ export const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <RoleGuard allowedRoles={['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT']}>
               <LeaveManagementPage />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Centralized Reports Center */}
+      <Route
+        path="/reports"
+        element={
+          <ProtectedRoute>
+            <RoleGuard allowedRoles={['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE']}>
+              <ReportsPage />
             </RoleGuard>
           </ProtectedRoute>
         }
