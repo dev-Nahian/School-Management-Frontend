@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { financeService } from '../services/finance.service';
 import { studentService } from '../services/student.service';
+import { structureService } from '../services/structure.service';
 import {
   DollarSign,
   CreditCard,
@@ -20,12 +22,16 @@ import {
   Layers,
   Wallet,
   Clock,
+  Trash2,
+  PlusCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import { Breadcrumbs } from '../components/ui/Breadcrumbs';
-import type { InvoiceModel, PaymentMethod } from '../services/finance.service';
+import type { InvoiceModel, PaymentMethod, FeeType } from '../services/finance.service';
 
 export const FinancePage: React.FC = () => {
   const { user } = useAuth();
+  const toast = useToast();
   const queryClient = useQueryClient();
 
   const isFinanceAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'FINANCE';
@@ -35,6 +41,7 @@ export const FinancePage: React.FC = () => {
 
   // Modals
   const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
+  const [isCreateStructureOpen, setIsCreateStructureOpen] = useState(false);
   const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
 
@@ -42,7 +49,7 @@ export const FinancePage: React.FC = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceModel | null>(null);
   const [selectedPaymentReceipt, setSelectedPaymentReceipt] = useState<any | null>(null);
 
-  // Forms
+  // Form States
   const [invoiceForm, setInvoiceForm] = useState({
     studentId: '',
     title: 'Grade 8 Term Tuition & Development Fee',
@@ -51,6 +58,13 @@ export const FinancePage: React.FC = () => {
       { title: 'Monthly Tuition Fee', amount: 450 },
       { title: 'Development Fee', amount: 100 },
     ],
+  });
+
+  const [structureForm, setStructureForm] = useState({
+    name: '',
+    feeType: 'TUITION' as FeeType,
+    amount: 500,
+    classId: '',
   });
 
   const [paymentForm, setPaymentForm] = useState({
@@ -80,11 +94,22 @@ export const FinancePage: React.FC = () => {
     enabled: isFinanceAdmin,
   });
 
-  const { data: students = [] } = useQuery({
+  const { data: rawStudents } = useQuery({
     queryKey: ['studentsListFinance'],
     queryFn: () => studentService.getStudents(),
     enabled: isFinanceAdmin,
   });
+
+  const { data: classes = [] } = useQuery({
+    queryKey: ['classesListFinance'],
+    queryFn: () => structureService.getClasses(),
+    enabled: isFinanceAdmin,
+  });
+
+  // Extract normalized student array
+  const studentList = Array.isArray(rawStudents)
+    ? rawStudents
+    : (rawStudents as any)?.data || (rawStudents as any)?.students || [];
 
   // Mutations
   const createInvoiceMutation = useMutation({
@@ -93,6 +118,46 @@ export const FinancePage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['financeMetrics'] });
       setIsCreateInvoiceOpen(false);
+      toast.success('Invoice Generated', 'New student billing invoice generated successfully.');
+    },
+    onError: (err: any) => {
+      toast.error('Invoice Creation Failed', err?.response?.data?.message || 'Error creating invoice');
+    },
+  });
+
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: financeService.deleteInvoice,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['financeMetrics'] });
+      toast.success('Invoice Deleted', 'Invoice removed from ledger.');
+    },
+    onError: (err: any) => {
+      toast.error('Failed to delete invoice', err?.response?.data?.message || 'Error deleting invoice');
+    },
+  });
+
+  const createFeeStructureMutation = useMutation({
+    mutationFn: financeService.createFeeStructure,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feeStructures'] });
+      setIsCreateStructureOpen(false);
+      setStructureForm({ name: '', feeType: 'TUITION', amount: 500, classId: '' });
+      toast.success('Fee Structure Created', 'New fee structure template added.');
+    },
+    onError: (err: any) => {
+      toast.error('Failed to create fee structure', err?.response?.data?.message || 'Error occurred');
+    },
+  });
+
+  const deleteFeeStructureMutation = useMutation({
+    mutationFn: financeService.deleteFeeStructure,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feeStructures'] });
+      toast.success('Fee Structure Deleted', 'Fee structure template removed.');
+    },
+    onError: (err: any) => {
+      toast.error('Failed to delete fee structure', err?.response?.data?.message || 'Error occurred');
     },
   });
 
@@ -103,6 +168,7 @@ export const FinancePage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['financeMetrics'] });
       setIsRecordPaymentOpen(false);
       setPaymentError('');
+      toast.success('Payment Recorded', 'Payment processed and invoice updated.');
 
       if (data?.payment) {
         setSelectedPaymentReceipt({
@@ -113,11 +179,27 @@ export const FinancePage: React.FC = () => {
       }
     },
     onError: (err: any) => {
-      setPaymentError(err?.response?.data?.message || err.message || 'Payment recording failed.');
+      const msg = err?.response?.data?.message || err.message || 'Payment recording failed.';
+      setPaymentError(msg);
+      toast.error('Payment Failed', msg);
     },
   });
 
-  // Helper for Payment Modal Trigger
+  // Modal Open Handlers
+  const handleOpenCreateInvoice = () => {
+    const defaultStudentId = studentList.length > 0 ? studentList[0].id : '';
+    setInvoiceForm({
+      studentId: defaultStudentId,
+      title: 'Grade 8 Term Tuition & Development Fee',
+      dueDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+      items: [
+        { title: 'Monthly Tuition Fee', amount: 450 },
+        { title: 'Development Fee', amount: 100 },
+      ],
+    });
+    setIsCreateInvoiceOpen(true);
+  };
+
   const handleOpenRecordPayment = (inv: InvoiceModel) => {
     setSelectedInvoice(inv);
     setPaymentForm({
@@ -134,11 +216,31 @@ export const FinancePage: React.FC = () => {
     window.print();
   };
 
+  // Helper for dynamic line items in Create Invoice
+  const handleAddLineItem = () => {
+    setInvoiceForm((prev) => ({
+      ...prev,
+      items: [...prev.items, { title: 'Other Fee Item', amount: 50 }],
+    }));
+  };
+
+  const handleRemoveLineItem = (index: number) => {
+    if (invoiceForm.items.length <= 1) return;
+    setInvoiceForm((prev) => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index),
+    }));
+  };
+
+  const calculateInvoiceTotal = () => {
+    return invoiceForm.items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  };
+
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
+    <div className="flex flex-col lg:flex-row gap-6 w-full">
       <Sidebar />
 
-      <div className="flex-1 space-y-6">
+      <div className="flex-1 space-y-6 min-w-0">
         <Breadcrumbs />
 
         {/* Banner */}
@@ -164,18 +266,18 @@ export const FinancePage: React.FC = () => {
                   onClick={async () => {
                     try {
                       const res = await financeService.generateRecurringInvoices();
-                      alert(res.message || 'Recurring billing batch executed successfully.');
+                      toast.success('Recurring Billing Executed', res.message || 'Batch processed successfully.');
                       queryClient.invalidateQueries({ queryKey: ['invoices'] });
                       queryClient.invalidateQueries({ queryKey: ['financeMetrics'] });
                     } catch {
-                      alert('Recurring billing batch completed for current period.');
+                      toast.info('Recurring Billing Batch Completed', 'Recurring billing batch executed for current period.');
                     }
                   }}
                   className="gap-1.5 text-xs border-purple-500/40 text-purple-300 hover:bg-purple-950/40"
                 >
                   <TrendingUp className="h-4 w-4 text-purple-400" /> Run Recurring Billing
                 </Button>
-                <Button size="sm" onClick={() => setIsCreateInvoiceOpen(true)} className="gap-1.5 text-xs">
+                <Button size="sm" onClick={handleOpenCreateInvoice} className="gap-1.5 text-xs">
                   <Plus className="h-4 w-4" /> Create Invoice
                 </Button>
               </div>
@@ -245,10 +347,10 @@ export const FinancePage: React.FC = () => {
         )}
 
         {/* View Navigation Tabs */}
-        <div className="flex items-center gap-2 border-b border-gray-800 pb-3">
+        <div className="flex items-center gap-2 border-b border-gray-800 pb-3 overflow-x-auto">
           {[
-            { id: 'invoices', label: 'Invoices Ledger', icon: FileText },
-            { id: 'structures', label: 'Fee Structures', icon: Layers },
+            { id: 'invoices', label: `Invoices Ledger (${invoices.length})`, icon: FileText },
+            { id: 'structures', label: `Fee Structures (${feeStructures.length})`, icon: Layers },
             { id: 'payments', label: 'Recent Receipts', icon: Receipt },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -281,91 +383,111 @@ export const FinancePage: React.FC = () => {
               </div>
 
               {isFinanceAdmin && (
-                <Button size="sm" onClick={() => setIsCreateInvoiceOpen(true)} className="gap-1.5 text-xs">
+                <Button size="sm" onClick={handleOpenCreateInvoice} className="gap-1.5 text-xs">
                   <Plus className="h-4 w-4" /> Generate Invoice
                 </Button>
               )}
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-gray-950/70 text-gray-400 font-semibold border-b border-gray-800">
-                    <tr>
-                      <th className="p-3">Invoice #</th>
-                      <th className="p-3">Student Name</th>
-                      <th className="p-3">Total</th>
-                      <th className="p-3">Paid</th>
-                      <th className="p-3">Calculated Due</th>
-                      <th className="p-3">Due Date</th>
-                      <th className="p-3">Status</th>
-                      <th className="p-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-800/60">
-                    {invoices.map((inv) => {
-                      const calculatedDue = inv.totalAmount - inv.paidAmount;
-                      return (
-                        <tr key={inv.id} className="hover:bg-gray-800/30 transition-colors">
-                          <td className="p-3 font-mono font-bold text-purple-300">{inv.invoiceNumber}</td>
-                          <td className="p-3 font-bold text-white">
-                            {inv.student?.firstName} {inv.student?.lastName}
-                          </td>
-                          <td className="p-3 font-mono text-white">${inv.totalAmount}</td>
-                          <td className="p-3 font-mono text-emerald-400">${inv.paidAmount}</td>
-                          <td className="p-3 font-mono font-bold text-amber-400">${calculatedDue}</td>
-                          <td className="p-3 font-mono text-gray-400">
-                            {new Date(inv.dueDate).toLocaleDateString()}
-                          </td>
-                          <td className="p-3">
-                            <Badge
-                              variant={
-                                inv.status === 'PAID'
-                                  ? 'success'
-                                  : inv.status === 'PARTIALLY_PAID'
-                                  ? 'warning'
-                                  : 'error'
-                              }
-                              className="text-[10px]"
-                            >
-                              {inv.status}
-                            </Badge>
-                          </td>
-                          <td className="p-3 text-right space-x-2">
-                            {isFinanceAdmin && calculatedDue > 0 && (
+              {invoices.length === 0 ? (
+                <div className="p-12 text-center text-gray-400 text-xs italic">
+                  No invoices generated yet. Click "Generate Invoice" to create billing for a student.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-gray-950/70 text-gray-400 font-semibold border-b border-gray-800">
+                      <tr>
+                        <th className="p-3">Invoice #</th>
+                        <th className="p-3">Student Name</th>
+                        <th className="p-3">Total</th>
+                        <th className="p-3">Paid</th>
+                        <th className="p-3">Calculated Due</th>
+                        <th className="p-3">Due Date</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800/60">
+                      {invoices.map((inv) => {
+                        const calculatedDue = inv.totalAmount - inv.paidAmount;
+                        return (
+                          <tr key={inv.id} className="hover:bg-gray-800/30 transition-colors">
+                            <td className="p-3 font-mono font-bold text-purple-300">{inv.invoiceNumber}</td>
+                            <td className="p-3 font-bold text-white">
+                              {inv.student ? `${inv.student.firstName} ${inv.student.lastName}` : 'Student'}
+                            </td>
+                            <td className="p-3 font-mono text-white">${inv.totalAmount}</td>
+                            <td className="p-3 font-mono text-emerald-400">${inv.paidAmount}</td>
+                            <td className="p-3 font-mono font-bold text-amber-400">${calculatedDue}</td>
+                            <td className="p-3 font-mono text-gray-400">
+                              {new Date(inv.dueDate).toLocaleDateString()}
+                            </td>
+                            <td className="p-3">
+                              <Badge
+                                variant={
+                                  inv.status === 'PAID'
+                                    ? 'success'
+                                    : inv.status === 'PARTIALLY_PAID'
+                                    ? 'warning'
+                                    : 'error'
+                                }
+                                className="text-[10px]"
+                              >
+                                {inv.status}
+                              </Badge>
+                            </td>
+                            <td className="p-3 text-right space-x-1.5">
+                              {isFinanceAdmin && calculatedDue > 0 && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleOpenRecordPayment(inv)}
+                                  className="h-7 px-2.5 text-[10px] gap-1 text-emerald-400 border-emerald-500/30 hover:bg-emerald-950/40"
+                                >
+                                  <CreditCard className="h-3.5 w-3.5" /> Record Payment
+                                </Button>
+                              )}
+
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleOpenRecordPayment(inv)}
-                                className="h-7 px-2.5 text-[10px] gap-1 text-emerald-400 border-emerald-500/30 hover:bg-emerald-950/40"
+                                onClick={() => {
+                                  setSelectedPaymentReceipt({
+                                    receiptNumber: `REC-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+                                    amount: inv.paidAmount || inv.totalAmount,
+                                    paymentMethod: 'CASH',
+                                    paymentDate: new Date().toISOString(),
+                                    invoice: inv,
+                                  });
+                                  setIsReceiptModalOpen(true);
+                                }}
+                                className="h-7 px-2.5 text-[10px] gap-1"
                               >
-                                <CreditCard className="h-3.5 w-3.5" /> Record Payment
+                                <Receipt className="h-3.5 w-3.5" /> Receipt
                               </Button>
-                            )}
 
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedPaymentReceipt({
-                                  receiptNumber: `REC-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-                                  amount: inv.paidAmount || inv.totalAmount,
-                                  paymentMethod: 'CASH',
-                                  paymentDate: new Date().toISOString(),
-                                  invoice: inv,
-                                });
-                                setIsReceiptModalOpen(true);
-                              }}
-                              className="h-7 px-2.5 text-[10px] gap-1"
-                            >
-                              <Receipt className="h-3.5 w-3.5" /> Receipt
-                            </Button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                              {isFinanceAdmin && (
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`Delete invoice ${inv.invoiceNumber}?`)) {
+                                      deleteInvoiceMutation.mutate(inv.id);
+                                    }
+                                  }}
+                                  className="text-gray-500 hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-500/10 transition-all inline-block align-middle"
+                                  title="Delete Invoice"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -373,32 +495,63 @@ export const FinancePage: React.FC = () => {
         {/* VIEW 2: FEE STRUCTURES */}
         {viewTab === 'structures' && (
           <Card className="border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-lg">Configured Fee Structures ({feeStructures.length})</CardTitle>
-              <CardDescription className="text-xs">
-                Master fee templates assigned to classes and academic terms
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Configured Fee Structures ({feeStructures.length})</CardTitle>
+                <CardDescription className="text-xs">
+                  Master fee templates assigned to classes and academic terms
+                </CardDescription>
+              </div>
+
+              {isFinanceAdmin && (
+                <Button size="sm" onClick={() => setIsCreateStructureOpen(true)} className="gap-1.5 text-xs">
+                  <Plus className="h-4 w-4" /> Add Fee Structure
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {feeStructures.map((fs) => (
-                  <div
-                    key={fs.id}
-                    className="p-4 rounded-2xl bg-gray-950/60 border border-gray-800 space-y-2 hover:border-purple-500/30 transition-all"
-                  >
-                    <div className="flex items-center justify-between">
-                      <Badge variant="purple" className="text-[10px]">
-                        {fs.feeType}
-                      </Badge>
-                      <span className="font-mono text-base font-extrabold text-emerald-400">${fs.amount}</span>
+              {feeStructures.length === 0 ? (
+                <div className="p-8 text-center text-gray-400 text-xs italic">
+                  No fee structures configured. Click "Add Fee Structure" to define tuition or exam fee templates.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {feeStructures.map((fs) => (
+                    <div
+                      key={fs.id}
+                      className="p-4 rounded-2xl bg-gray-950/60 border border-gray-800 space-y-2 hover:border-purple-500/30 transition-all flex flex-col justify-between"
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="purple" className="text-[10px]">
+                            {fs.feeType}
+                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-base font-extrabold text-emerald-400">${fs.amount}</span>
+                            {isFinanceAdmin && (
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Delete fee structure "${fs.name}"?`)) {
+                                    deleteFeeStructureMutation.mutate(fs.id);
+                                  }
+                                }}
+                                className="text-gray-500 hover:text-rose-400 p-1 rounded transition-colors"
+                                title="Delete Fee Structure"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <h4 className="font-bold text-white text-sm">{fs.name}</h4>
+                      </div>
+                      <p className="text-[11px] text-gray-400 font-mono pt-2 border-t border-gray-800/80">
+                        Target: {fs.class?.name || 'All Classes Global'}
+                      </p>
                     </div>
-                    <h4 className="font-bold text-white text-sm">{fs.name}</h4>
-                    <p className="text-[11px] text-gray-400 font-mono">
-                      Target: {fs.class?.name || 'All Classes Global'}
-                    </p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -471,8 +624,8 @@ export const FinancePage: React.FC = () => {
 
       {/* MODAL 1: Create Invoice Dialog */}
       {isCreateInvoiceOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md glass-panel p-6 rounded-3xl border border-purple-500/30 space-y-4 bg-gray-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="w-full max-w-md glass-panel p-6 rounded-3xl border border-purple-500/30 space-y-4 bg-gray-900 shadow-2xl">
             <div className="flex items-center justify-between border-b border-gray-800 pb-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <FileText className="h-5 w-5 text-purple-400" /> Generate Student Invoice
@@ -488,15 +641,18 @@ export const FinancePage: React.FC = () => {
                 <select
                   value={invoiceForm.studentId}
                   onChange={(e) => setInvoiceForm({ ...invoiceForm, studentId: e.target.value })}
-                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs"
+                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs focus:border-purple-500 focus:outline-none"
                 >
-                  <option value="">Select Student</option>
-                  {(Array.isArray(students) ? students : (students as any)?.students || []).map((s: any) => (
+                  <option value="">-- Select Student --</option>
+                  {studentList.map((s: any) => (
                     <option key={s.id} value={s.id}>
-                      {s.firstName} {s.lastName} ({s.studentId})
+                      {s.firstName} {s.lastName} ({s.studentId || 'ID'})
                     </option>
                   ))}
                 </select>
+                {studentList.length === 0 && (
+                  <p className="text-[10px] text-amber-400 mt-1 italic">No registered students found in database.</p>
+                )}
               </div>
 
               <div>
@@ -505,7 +661,8 @@ export const FinancePage: React.FC = () => {
                   type="text"
                   value={invoiceForm.title}
                   onChange={(e) => setInvoiceForm({ ...invoiceForm, title: e.target.value })}
-                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs"
+                  placeholder="e.g. Grade 8 Term Tuition Fee"
+                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs focus:border-purple-500 focus:outline-none"
                 />
               </div>
 
@@ -515,15 +672,25 @@ export const FinancePage: React.FC = () => {
                   type="date"
                   value={invoiceForm.dueDate}
                   onChange={(e) => setInvoiceForm({ ...invoiceForm, dueDate: e.target.value })}
-                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs font-mono"
+                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs font-mono [color-scheme:dark] focus:border-purple-500 focus:outline-none"
                 />
               </div>
 
-              {/* Line Items */}
+              {/* Dynamic Line Items */}
               <div className="space-y-2 border-t border-gray-800 pt-2">
-                <span className="font-semibold text-gray-300 block">Line Items</span>
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-gray-300 block">Line Items</span>
+                  <button
+                    type="button"
+                    onClick={handleAddLineItem}
+                    className="text-[10px] text-purple-400 hover:text-purple-300 font-bold flex items-center gap-1"
+                  >
+                    <PlusCircle className="h-3 w-3" /> Add Item
+                  </button>
+                </div>
+
                 {invoiceForm.items.map((item, idx) => (
-                  <div key={idx} className="flex gap-2">
+                  <div key={idx} className="flex gap-2 items-center">
                     <input
                       type="text"
                       value={item.title}
@@ -532,7 +699,8 @@ export const FinancePage: React.FC = () => {
                         newItems[idx].title = e.target.value;
                         setInvoiceForm({ ...invoiceForm, items: newItems });
                       }}
-                      className="flex-1 px-3 py-1.5 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs"
+                      placeholder="Fee Item Title"
+                      className="flex-1 px-3 py-1.5 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs focus:border-purple-500 focus:outline-none"
                     />
                     <input
                       type="number"
@@ -542,10 +710,25 @@ export const FinancePage: React.FC = () => {
                         newItems[idx].amount = Number(e.target.value);
                         setInvoiceForm({ ...invoiceForm, items: newItems });
                       }}
-                      className="w-24 px-3 py-1.5 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs font-mono"
+                      placeholder="Amount"
+                      className="w-24 px-3 py-1.5 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs font-mono focus:border-purple-500 focus:outline-none"
                     />
+                    {invoiceForm.items.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLineItem(idx)}
+                        className="text-gray-500 hover:text-rose-400 p-1"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
                 ))}
+
+                <div className="flex justify-between items-center pt-2 text-xs font-mono text-emerald-400 font-bold">
+                  <span>Calculated Invoice Total:</span>
+                  <span>${calculateInvoiceTotal()}</span>
+                </div>
               </div>
             </div>
 
@@ -558,17 +741,108 @@ export const FinancePage: React.FC = () => {
                 disabled={!invoiceForm.studentId || createInvoiceMutation.isPending}
                 onClick={() => createInvoiceMutation.mutate(invoiceForm)}
               >
-                Generate Invoice
+                {createInvoiceMutation.isPending ? 'Generating...' : 'Generate Invoice'}
               </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL 2: Record Payment Dialog */}
+      {/* MODAL 2: Create Fee Structure Dialog */}
+      {isCreateStructureOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="w-full max-w-md glass-panel p-6 rounded-3xl border border-purple-500/30 space-y-4 bg-gray-900 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Layers className="h-5 w-5 text-purple-400" /> Create Fee Structure Template
+              </h3>
+              <button onClick={() => setIsCreateStructureOpen(false)} className="text-gray-400 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="text-gray-300 font-medium block">Structure Name</label>
+                <input
+                  type="text"
+                  value={structureForm.name}
+                  onChange={(e) => setStructureForm({ ...structureForm, name: e.target.value })}
+                  placeholder="e.g. Standard Grade 8 Tuition"
+                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs focus:border-purple-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-gray-300 font-medium block">Fee Classification</label>
+                <select
+                  value={structureForm.feeType}
+                  onChange={(e) => setStructureForm({ ...structureForm, feeType: e.target.value as FeeType })}
+                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs focus:border-purple-500 focus:outline-none"
+                >
+                  <option value="TUITION">TUITION</option>
+                  <option value="ADMISSION">ADMISSION</option>
+                  <option value="EXAM">EXAM</option>
+                  <option value="TRANSPORT">TRANSPORT</option>
+                  <option value="DEVELOPMENT">DEVELOPMENT</option>
+                  <option value="OTHER">OTHER</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-gray-300 font-medium block">Fee Amount ($)</label>
+                <input
+                  type="number"
+                  value={structureForm.amount}
+                  onChange={(e) => setStructureForm({ ...structureForm, amount: Number(e.target.value) })}
+                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs font-mono focus:border-purple-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-gray-300 font-medium block">Target Class (Optional)</label>
+                <select
+                  value={structureForm.classId}
+                  onChange={(e) => setStructureForm({ ...structureForm, classId: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs focus:border-purple-500 focus:outline-none"
+                >
+                  <option value="">All Classes (Global Fee)</option>
+                  {classes.map((cls) => (
+                    <option key={cls.id} value={cls.id}>
+                      {cls.name} ({cls.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-gray-800">
+              <Button variant="outline" size="sm" onClick={() => setIsCreateStructureOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                disabled={!structureForm.name || structureForm.amount <= 0 || createFeeStructureMutation.isPending}
+                onClick={() =>
+                  createFeeStructureMutation.mutate({
+                    name: structureForm.name,
+                    feeType: structureForm.feeType,
+                    amount: structureForm.amount,
+                    classId: structureForm.classId || undefined,
+                  })
+                }
+              >
+                {createFeeStructureMutation.isPending ? 'Creating...' : 'Create Fee Structure'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: Record Payment Dialog */}
       {isRecordPaymentOpen && selectedInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md glass-panel p-6 rounded-3xl border border-purple-500/30 space-y-4 bg-gray-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="w-full max-w-md glass-panel p-6 rounded-3xl border border-purple-500/30 space-y-4 bg-gray-900 shadow-2xl">
             <div className="flex items-center justify-between border-b border-gray-800 pb-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-emerald-400" /> Record Fee Payment
@@ -581,7 +855,9 @@ export const FinancePage: React.FC = () => {
             <div className="p-3 rounded-2xl bg-gray-950 border border-gray-800 text-xs space-y-1">
               <div className="flex justify-between text-gray-400 font-mono">
                 <span>Invoice #: {selectedInvoice.invoiceNumber}</span>
-                <span>Due Balance: <strong className="text-amber-400">${selectedInvoice.dueAmount}</strong></span>
+                <span>
+                  Due Balance: <strong className="text-amber-400">${selectedInvoice.dueAmount}</strong>
+                </span>
               </div>
               <p className="font-bold text-white">{selectedInvoice.title}</p>
             </div>
@@ -602,7 +878,7 @@ export const FinancePage: React.FC = () => {
                   max={selectedInvoice.dueAmount}
                   value={paymentForm.amount}
                   onChange={(e) => setPaymentForm({ ...paymentForm, amount: Number(e.target.value) })}
-                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs font-mono font-bold"
+                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs font-mono font-bold focus:border-emerald-500 focus:outline-none"
                 />
               </div>
 
@@ -611,7 +887,7 @@ export const FinancePage: React.FC = () => {
                 <select
                   value={paymentForm.paymentMethod}
                   onChange={(e) => setPaymentForm({ ...paymentForm, paymentMethod: e.target.value as any })}
-                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs"
+                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs focus:border-purple-500 focus:outline-none"
                 >
                   <option value="CASH">Cash Counter</option>
                   <option value="BANK">Bank Deposit / Wire</option>
@@ -627,7 +903,7 @@ export const FinancePage: React.FC = () => {
                   type="text"
                   value={paymentForm.notes}
                   onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs"
+                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs focus:border-purple-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -642,16 +918,16 @@ export const FinancePage: React.FC = () => {
                 onClick={() => recordPaymentMutation.mutate(paymentForm)}
                 className="bg-emerald-600 hover:bg-emerald-500"
               >
-                Submit Payment & Print Receipt
+                {recordPaymentMutation.isPending ? 'Processing...' : 'Submit Payment & Print Receipt'}
               </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL 3: Formal Printable Payment Receipt */}
+      {/* MODAL 4: Formal Printable Payment Receipt */}
       {isReceiptModalOpen && selectedPaymentReceipt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
           <div className="w-full max-w-lg bg-white text-gray-900 p-8 rounded-3xl shadow-2xl space-y-6 print:m-0 print:p-6 print:rounded-none">
             {/* Header */}
             <div className="flex justify-between items-start border-b border-gray-200 pb-4">

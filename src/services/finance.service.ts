@@ -125,4 +125,12 @@ export const financeService = {
     const response = await api.post('/v1/finance/update-overdue');
     return response.data;
   },
+
+  deleteInvoice: async (id: string): Promise<void> => {
+    await api.delete(`/v1/finance/invoices/${id}`);
+  },
+
+  deleteFeeStructure: async (id: string): Promise<void> => {
+    await api.delete(`/v1/finance/structures/${id}`);
+  },
 };
