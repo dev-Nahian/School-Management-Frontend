@@ -234,6 +234,18 @@ export const SchoolStructurePage: React.FC = () => {
     },
   });
 
+  // Helper trigger to open Year Modal with default start/end dates
+  const handleOpenYearModal = () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const nextYr = new Date();
+    nextYr.setFullYear(nextYr.getFullYear() + 1);
+    const nextYrStr = nextYr.toISOString().split('T')[0];
+
+    setYearStartDate(todayStr);
+    setYearEndDate(nextYrStr);
+    setIsYearModalOpen(true);
+  };
+
   // Helper trigger to open Section Modal for a specific Class
   const handleOpenSectionModal = (classId?: string) => {
     if (classId) setSelectedClassIdForSec(classId);
@@ -280,7 +292,7 @@ export const SchoolStructurePage: React.FC = () => {
                   <BookOpen className="h-4 w-4" /> Add Subject
                 </Button>
 
-                <Button size="sm" variant="outline" onClick={() => setIsYearModalOpen(true)} className="gap-1.5 text-xs">
+                <Button size="sm" variant="outline" onClick={() => handleOpenYearModal()} className="gap-1.5 text-xs">
                   <Calendar className="h-4 w-4" /> Add Session
                 </Button>
 
@@ -604,7 +616,7 @@ export const SchoolStructurePage: React.FC = () => {
                 <CardDescription>Active and upcoming institutional sessions</CardDescription>
               </div>
               {isSuperAdmin && (
-                <Button size="sm" onClick={() => setIsYearModalOpen(true)} className="gap-1.5 text-xs">
+                <Button size="sm" onClick={() => handleOpenYearModal()} className="gap-1.5 text-xs">
                   <Calendar className="h-4 w-4" /> Add Academic Session
                 </Button>
               )}
@@ -941,7 +953,7 @@ export const SchoolStructurePage: React.FC = () => {
                   type="date"
                   value={yearStartDate}
                   onChange={(e) => setYearStartDate(e.target.value)}
-                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs focus:border-purple-500 focus:outline-none"
+                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs focus:border-purple-500 focus:outline-none [color-scheme:dark]"
                 />
               </div>
 
@@ -951,7 +963,7 @@ export const SchoolStructurePage: React.FC = () => {
                   type="date"
                   value={yearEndDate}
                   onChange={(e) => setYearEndDate(e.target.value)}
-                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs focus:border-purple-500 focus:outline-none"
+                  className="w-full mt-1 px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs focus:border-purple-500 focus:outline-none [color-scheme:dark]"
                 />
               </div>
 
@@ -975,15 +987,20 @@ export const SchoolStructurePage: React.FC = () => {
               </Button>
               <Button
                 size="sm"
-                disabled={!yearName || !yearStartDate || !yearEndDate || createYearMutation.isPending}
-                onClick={() =>
+                disabled={!yearName || createYearMutation.isPending}
+                onClick={() => {
+                  const finalStart = yearStartDate || new Date().toISOString().split('T')[0];
+                  const nextYr = new Date();
+                  nextYr.setFullYear(nextYr.getFullYear() + 1);
+                  const finalEnd = yearEndDate || nextYr.toISOString().split('T')[0];
+
                   createYearMutation.mutate({
                     name: yearName,
-                    startDate: yearStartDate,
-                    endDate: yearEndDate,
+                    startDate: finalStart,
+                    endDate: finalEnd,
                     isCurrent: yearIsCurrent,
-                  })
-                }
+                  });
+                }}
               >
                 {createYearMutation.isPending ? 'Adding...' : 'Add Session'}
               </Button>
