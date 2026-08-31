@@ -18,7 +18,7 @@ import {
   School,
   X,
   PlusCircle,
-  CheckCircle2
+  Trash2
 } from 'lucide-react';
 import type { SubjectType } from '../types/structure';
 
@@ -122,6 +122,17 @@ export const SchoolStructurePage: React.FC = () => {
     },
   });
 
+  const deleteClassMutation = useMutation({
+    mutationFn: structureService.deleteClass,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
+      toast.success('Class Deleted', 'Class removed from school catalog.');
+    },
+    onError: (err: any) => {
+      toast.error('Failed to delete class', err?.response?.data?.message || 'Error occurred');
+    },
+  });
+
   const createSectionMutation = useMutation({
     mutationFn: structureService.createSection,
     onSuccess: () => {
@@ -132,6 +143,17 @@ export const SchoolStructurePage: React.FC = () => {
     },
     onError: (err: any) => {
       toast.error('Failed to create section', err?.response?.data?.message || 'Error occurred');
+    },
+  });
+
+  const deleteSectionMutation = useMutation({
+    mutationFn: structureService.deleteSection,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sections'] });
+      toast.success('Section Deleted', 'Section removed successfully.');
+    },
+    onError: (err: any) => {
+      toast.error('Failed to delete section', err?.response?.data?.message || 'Error occurred');
     },
   });
 
@@ -146,6 +168,17 @@ export const SchoolStructurePage: React.FC = () => {
     },
     onError: (err: any) => {
       toast.error('Failed to register subject', err?.response?.data?.message || 'Error occurred');
+    },
+  });
+
+  const deleteSubjectMutation = useMutation({
+    mutationFn: structureService.deleteSubject,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subjects'] });
+      toast.success('Subject Deleted', 'Subject removed from curriculum directory.');
+    },
+    onError: (err: any) => {
+      toast.error('Failed to delete subject', err?.response?.data?.message || 'Error occurred');
     },
   });
 
@@ -164,6 +197,17 @@ export const SchoolStructurePage: React.FC = () => {
     },
   });
 
+  const deleteYearMutation = useMutation({
+    mutationFn: structureService.deleteAcademicYear,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['academicYears'] });
+      toast.success('Academic Session Deleted', 'Academic session removed successfully.');
+    },
+    onError: (err: any) => {
+      toast.error('Failed to delete academic session', err?.response?.data?.message || 'Error occurred');
+    },
+  });
+
   const assignTeacherMutation = useMutation({
     mutationFn: structureService.assignSubjectTeacher,
     onSuccess: () => {
@@ -176,6 +220,17 @@ export const SchoolStructurePage: React.FC = () => {
     },
     onError: (err: any) => {
       toast.error('Failed to assign teacher', err?.response?.data?.message || 'Error occurred');
+    },
+  });
+
+  const deleteAssignmentMutation = useMutation({
+    mutationFn: structureService.deleteTeacherAssignment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teacherAssignments'] });
+      toast.success('Assignment Removed', 'Teacher subject assignment deleted.');
+    },
+    onError: (err: any) => {
+      toast.error('Failed to remove assignment', err?.response?.data?.message || 'Error occurred');
     },
   });
 
@@ -192,10 +247,10 @@ export const SchoolStructurePage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
+    <div className="flex flex-col lg:flex-row gap-6 w-full">
       <Sidebar />
 
-      <div className="flex-1 space-y-6">
+      <div className="flex-1 space-y-6 min-w-0">
         {/* Header Panel */}
         <div className="glass-panel p-6 rounded-3xl border border-purple-500/20 bg-gradient-to-r from-purple-900/30 via-gray-900/40 to-indigo-900/20">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -301,7 +356,7 @@ export const SchoolStructurePage: React.FC = () => {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                 {classes.map((cls) => {
                   const clsSections = sections.filter((sec) => sec.classId === cls.id);
                   const clsSubjects = subjects.filter((sub) => sub.classId === cls.id || !sub.classId);
@@ -313,9 +368,24 @@ export const SchoolStructurePage: React.FC = () => {
                           <Badge variant="purple" className="font-mono text-[10px]">
                             {cls.code}
                           </Badge>
-                          <Badge variant="success" className="text-[9px]">
-                            Active
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="success" className="text-[9px]">
+                              Active
+                            </Badge>
+                            {isSuperAdmin && (
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Are you sure you want to delete class "${cls.name}"?`)) {
+                                    deleteClassMutation.mutate(cls.id);
+                                  }
+                                }}
+                                title="Delete Class"
+                                className="text-gray-500 hover:text-rose-400 p-1 rounded transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <CardTitle className="text-lg font-bold text-white mt-1">{cls.name}</CardTitle>
                         <CardDescription className="text-xs">Display Order: {cls.displayOrder}</CardDescription>
@@ -342,10 +412,22 @@ export const SchoolStructurePage: React.FC = () => {
                               {clsSections.map((sec) => (
                                 <div
                                   key={sec.id}
-                                  className="px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-xs text-purple-200 flex items-center gap-1 font-mono"
+                                  className="px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-xs text-purple-200 flex items-center gap-1.5 font-mono"
                                 >
                                   <span>{sec.name}</span>
                                   <span className="text-[9px] text-gray-400">({sec.capacity} max)</span>
+                                  {isSuperAdmin && (
+                                    <button
+                                      onClick={() => {
+                                        if (confirm(`Delete section "${sec.name}"?`)) {
+                                          deleteSectionMutation.mutate(sec.id);
+                                        }
+                                      }}
+                                      className="text-gray-400 hover:text-rose-400 ml-0.5"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -405,7 +487,7 @@ export const SchoolStructurePage: React.FC = () => {
                         <th className="p-3">Subject Code</th>
                         <th className="p-3">Subject Type</th>
                         <th className="p-3">Assigned Class</th>
-                        <th className="p-3 text-right">Status</th>
+                        <th className="p-3 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-800/60">
@@ -423,9 +505,19 @@ export const SchoolStructurePage: React.FC = () => {
                           </td>
                           <td className="p-3 text-gray-300">{sub.class?.name || 'All Classes'}</td>
                           <td className="p-3 text-right">
-                            <Badge variant="success" className="text-[10px]">
-                              Active
-                            </Badge>
+                            {isSuperAdmin && (
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Delete subject "${sub.name}"?`)) {
+                                    deleteSubjectMutation.mutate(sub.id);
+                                  }
+                                }}
+                                className="text-gray-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-500/10 transition-all"
+                                title="Delete Subject"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -464,7 +556,7 @@ export const SchoolStructurePage: React.FC = () => {
                         <th className="p-3">Educator Name</th>
                         <th className="p-3">Subject</th>
                         <th className="p-3">Class & Section</th>
-                        <th className="p-3 text-right">Status</th>
+                        <th className="p-3 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-800/60">
@@ -479,9 +571,19 @@ export const SchoolStructurePage: React.FC = () => {
                             {ta.section?.class?.name || 'Class'} - {ta.section?.name || 'Section'}
                           </td>
                           <td className="p-3 text-right">
-                            <Badge variant="success" className="text-[10px]">
-                              Assigned & Active
-                            </Badge>
+                            {isSuperAdmin && (
+                              <button
+                                onClick={() => {
+                                  if (confirm('Delete teacher assignment?')) {
+                                    deleteAssignmentMutation.mutate(ta.id);
+                                  }
+                                }}
+                                className="text-gray-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-500/10 transition-all"
+                                title="Remove Assignment"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -517,7 +619,7 @@ export const SchoolStructurePage: React.FC = () => {
                   {years.map((ay) => (
                     <div
                       key={ay.id}
-                      className={`p-4 rounded-2xl border transition-all ${
+                      className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
                         ay.isCurrent
                           ? 'bg-purple-500/10 border-purple-500/40'
                           : 'bg-gray-950/60 border-gray-800'
@@ -528,22 +630,37 @@ export const SchoolStructurePage: React.FC = () => {
                           <Calendar className="h-5 w-5 text-purple-400" />
                           <span className="text-base font-extrabold text-white">{ay.name}</span>
                         </div>
-                        {ay.isCurrent ? (
-                          <Badge variant="purple" className="gap-1 font-mono text-[10px]">
-                            <Star className="h-3 w-3 fill-purple-300 text-purple-300" /> Active Session
-                          </Badge>
-                        ) : (
-                          isSuperAdmin && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setYearCurrentMutation.mutate(ay.id)}
-                              className="text-[10px] h-7 px-2.5"
+                        <div className="flex items-center gap-2">
+                          {ay.isCurrent ? (
+                            <Badge variant="purple" className="gap-1 font-mono text-[10px]">
+                              <Star className="h-3 w-3 fill-purple-300 text-purple-300" /> Active Session
+                            </Badge>
+                          ) : (
+                            isSuperAdmin && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setYearCurrentMutation.mutate(ay.id)}
+                                className="text-[10px] h-7 px-2.5"
+                              >
+                                Set Active
+                              </Button>
+                            )
+                          )}
+                          {isSuperAdmin && (
+                            <button
+                              onClick={() => {
+                                if (confirm(`Delete session "${ay.name}"?`)) {
+                                  deleteYearMutation.mutate(ay.id);
+                                }
+                              }}
+                              className="text-gray-500 hover:text-rose-400 p-1 rounded transition-colors"
+                              title="Delete Session"
                             >
-                              Set Active
-                            </Button>
-                          )
-                        )}
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="mt-3 flex items-center justify-between text-xs text-gray-400 font-mono">
                         <span>Start: {new Date(ay.startDate).toLocaleDateString()}</span>

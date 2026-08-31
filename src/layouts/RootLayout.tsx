@@ -21,7 +21,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
 
       <Header isDbConnected={health?.isDbConnected} />
       
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 pt-8 pb-12">
+      <main className="flex-1 max-w-[1750px] w-full mx-auto px-4 md:px-8 pt-8 pb-12">
         {children}
       </main>
 

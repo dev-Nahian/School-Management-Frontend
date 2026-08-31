@@ -77,4 +77,24 @@ export const structureService = {
     const response = await api.post('/v1/structure/teacher-assignments', input);
     return response.data.data;
   },
+
+  deleteClass: async (id: string): Promise<void> => {
+    await api.delete(`/v1/structure/classes/${id}`);
+  },
+
+  deleteSection: async (id: string): Promise<void> => {
+    await api.delete(`/v1/structure/sections/${id}`);
+  },
+
+  deleteSubject: async (id: string): Promise<void> => {
+    await api.delete(`/v1/structure/subjects/${id}`);
+  },
+
+  deleteAcademicYear: async (id: string): Promise<void> => {
+    await api.delete(`/v1/structure/academic-years/${id}`);
+  },
+
+  deleteTeacherAssignment: async (id: string): Promise<void> => {
+    await api.delete(`/v1/structure/teacher-assignments/${id}`);
+  },
 };
