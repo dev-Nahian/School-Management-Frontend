@@ -124,7 +124,7 @@ export const FinancePage: React.FC = () => {
 
   const { data: rawStudents } = useQuery({
     queryKey: ['studentsListFinance'],
-    queryFn: () => studentService.getStudents(),
+    queryFn: () => studentService.getStudents({ limit: 500 }),
     enabled: isFinanceAdmin,
   });
 

@@ -358,7 +358,7 @@ export const ReportsPage: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-400">Total Fee Collections</p>
-                    <h4 className="text-2xl font-black text-amber-400">৳{financeReport?.totalCollected?.toLocaleString() || 0}</h4>
+                    <h4 className="text-2xl font-black text-amber-400">${financeReport?.totalCollected?.toLocaleString() || 0}</h4>
                   </div>
                 </CardContent>
               </Card>
@@ -412,7 +412,7 @@ export const ReportsPage: React.FC = () => {
                             <td className="p-3 font-medium text-white">
                               {p.invoice?.student?.firstName} {p.invoice?.student?.lastName}
                             </td>
-                            <td className="p-3 font-mono font-bold text-white">৳{p.amount?.toLocaleString()}</td>
+                            <td className="p-3 font-mono font-bold text-white">${p.amount?.toLocaleString()}</td>
                             <td className="p-3"><Badge variant="info" className="text-[10px]">{p.paymentMethod}</Badge></td>
                             <td className="p-3 font-mono">{new Date(p.paymentDate).toLocaleDateString()}</td>
                           </tr>

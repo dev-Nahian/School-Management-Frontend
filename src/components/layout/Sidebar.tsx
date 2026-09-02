@@ -64,13 +64,13 @@ const navItems: NavItem[] = [
     title: 'Attendance Desk',
     href: '/attendance',
     icon: CalendarCheck,
-    roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT'],
+    roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
   },
   {
     title: 'Academic Results',
     href: '/results',
     icon: Award,
-    roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT'],
+    roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
   },
   {
     title: 'Finance & Invoicing',

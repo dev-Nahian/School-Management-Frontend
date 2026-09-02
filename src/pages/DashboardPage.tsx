@@ -336,28 +336,28 @@ export const DashboardPage: React.FC = () => {
               <Card className="border-gray-800 bg-gray-900/50">
                 <CardContent className="p-4">
                   <p className="text-xs text-gray-400">Today's Collection</p>
-                  <h3 className="text-xl font-bold text-emerald-400 mt-1 font-mono">৳{financeData.todayCollection?.toLocaleString()}</h3>
+                  <h3 className="text-xl font-bold text-emerald-400 mt-1 font-mono">${financeData.todayCollection?.toLocaleString()}</h3>
                 </CardContent>
               </Card>
 
               <Card className="border-gray-800 bg-gray-900/50">
                 <CardContent className="p-4">
                   <p className="text-xs text-gray-400">Monthly Collection</p>
-                  <h3 className="text-xl font-bold text-blue-400 mt-1 font-mono">৳{financeData.monthCollection?.toLocaleString()}</h3>
+                  <h3 className="text-xl font-bold text-blue-400 mt-1 font-mono">${financeData.monthCollection?.toLocaleString()}</h3>
                 </CardContent>
               </Card>
 
               <Card className="border-gray-800 bg-gray-900/50">
                 <CardContent className="p-4">
                   <p className="text-xs text-gray-400">Pending Balance</p>
-                  <h3 className="text-xl font-bold text-amber-400 mt-1 font-mono">৳{financeData.pendingTotal?.toLocaleString()}</h3>
+                  <h3 className="text-xl font-bold text-amber-400 mt-1 font-mono">${financeData.pendingTotal?.toLocaleString()}</h3>
                 </CardContent>
               </Card>
 
               <Card className="border-gray-800 bg-gray-900/50">
                 <CardContent className="p-4">
                   <p className="text-xs text-gray-400">Overdue Balance</p>
-                  <h3 className="text-xl font-bold text-rose-400 mt-1 font-mono">৳{financeData.overdueTotal?.toLocaleString()}</h3>
+                  <h3 className="text-xl font-bold text-rose-400 mt-1 font-mono">${financeData.overdueTotal?.toLocaleString()}</h3>
                 </CardContent>
               </Card>
             </div>
