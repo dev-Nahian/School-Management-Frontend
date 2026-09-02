@@ -40,7 +40,7 @@ const navItems: NavItem[] = [
     title: 'School Structure',
     href: '/structure',
     icon: School,
-    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER'],
+    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE'],
   },
   {
     title: 'Admissions Engine',
@@ -52,13 +52,13 @@ const navItems: NavItem[] = [
     title: 'Student Directory',
     href: '/students',
     icon: GraduationCap,
-    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER'],
+    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE'],
   },
   {
     title: 'Teacher Roster',
     href: '/teachers',
     icon: Users,
-    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN'],
+    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'FINANCE'],
   },
   {
     title: 'Attendance Desk',

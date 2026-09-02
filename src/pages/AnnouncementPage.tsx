@@ -28,7 +28,7 @@ export const AnnouncementPage: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'FINANCE';
 
   // Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);

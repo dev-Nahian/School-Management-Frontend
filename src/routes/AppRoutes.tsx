@@ -68,7 +68,7 @@ export const AppRoutes: React.FC = () => {
           path="/structure"
           element={
             <ProtectedRoute>
-              <RoleGuard allowedRoles={['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER']}>
+              <RoleGuard allowedRoles={['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE']}>
                 <SchoolStructurePage />
               </RoleGuard>
             </ProtectedRoute>
@@ -80,7 +80,7 @@ export const AppRoutes: React.FC = () => {
           path="/students"
           element={
             <ProtectedRoute>
-              <RoleGuard allowedRoles={['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER']}>
+              <RoleGuard allowedRoles={['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE']}>
                 <StudentListPage />
               </RoleGuard>
             </ProtectedRoute>
@@ -114,7 +114,7 @@ export const AppRoutes: React.FC = () => {
           path="/teachers"
           element={
             <ProtectedRoute>
-              <RoleGuard allowedRoles={['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER']}>
+              <RoleGuard allowedRoles={['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE']}>
                 <TeacherDashboardPage />
               </RoleGuard>
             </ProtectedRoute>
