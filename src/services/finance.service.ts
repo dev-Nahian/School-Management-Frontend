@@ -3,6 +3,7 @@ import { apiClient as api } from '../lib/axios';
 export type FeeType = 'ADMISSION' | 'TUITION' | 'EXAM' | 'TRANSPORT' | 'DEVELOPMENT' | 'OTHER';
 export type InvoiceStatus = 'UNPAID' | 'PARTIALLY_PAID' | 'PAID' | 'OVERDUE';
 export type PaymentMethod = 'CASH' | 'BANK' | 'CARD' | 'MOBILE_BANKING' | 'OTHER';
+export type ExpenseCategory = 'SALARY' | 'UTILITIES' | 'MAINTENANCE' | 'SUPPLIES' | 'EQUIPMENT' | 'EVENTS' | 'OTHER';
 
 export interface FeeStructure {
   id: string;
@@ -44,6 +45,18 @@ export interface InvoiceModel {
   }[];
 }
 
+export interface ExpenseModel {
+  id: string;
+  title: string;
+  category: ExpenseCategory;
+  amount: number;
+  expenseDate: string;
+  vendorName?: string;
+  paymentMethod: PaymentMethod;
+  notes?: string;
+  createdAt?: string;
+}
+
 export interface FinanceDashboardMetrics {
   todayCollection: number;
   monthlyCollection: number;
@@ -51,6 +64,8 @@ export interface FinanceDashboardMetrics {
   collectedTotal: number;
   pendingTotal: number;
   overdueTotal: number;
+  totalExpenses?: number;
+  netCashflow?: number;
   recentPayments: {
     id: string;
     receiptNumber: string;
@@ -113,6 +128,28 @@ export const financeService = {
     return response.data.data;
   },
 
+  getExpenses: async (): Promise<ExpenseModel[]> => {
+    const response = await api.get('/v1/finance/expenses');
+    return response.data.data;
+  },
+
+  createExpense: async (input: {
+    title: string;
+    category: ExpenseCategory;
+    amount: number;
+    vendorName?: string;
+    paymentMethod: PaymentMethod;
+    notes?: string;
+    expenseDate?: string;
+  }): Promise<ExpenseModel> => {
+    const response = await api.post('/v1/finance/expenses', input);
+    return response.data.data;
+  },
+
+  deleteExpense: async (id: string): Promise<void> => {
+    await api.delete(`/v1/finance/expenses/${id}`);
+  },
+
   generateRecurringInvoices: async (input?: {
     billingPeriod?: string;
     classId?: string;
@@ -134,3 +171,4 @@ export const financeService = {
     await api.delete(`/v1/finance/structures/${id}`);
   },
 };
+
