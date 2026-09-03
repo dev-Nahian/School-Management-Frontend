@@ -18,6 +18,10 @@ import {
   Menu,
   X,
   FileText,
+  Calendar,
+  Megaphone,
+  Library,
+  CalendarOff,
 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import type { UserRole } from '../../types';
@@ -83,6 +87,30 @@ const navItems: NavItem[] = [
     href: '/assignments',
     icon: BookOpen,
     roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT'],
+  },
+  {
+    title: 'Timetable Schedule',
+    href: '/timetable',
+    icon: Calendar,
+    roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
+  },
+  {
+    title: 'Announcements',
+    href: '/announcements',
+    icon: Megaphone,
+    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE', 'STUDENT', 'PARENT'],
+  },
+  {
+    title: 'Library Desk',
+    href: '/library',
+    icon: Library,
+    roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
+  },
+  {
+    title: 'Leave Management',
+    href: '/leave',
+    icon: CalendarOff,
+    roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
   },
   {
     title: 'Reports Center',

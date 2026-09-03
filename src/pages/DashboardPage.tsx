@@ -22,6 +22,12 @@ import {
   Award,
   CreditCard,
   HeartHandshake,
+  School,
+  Activity,
+  Settings,
+  ShieldCheck,
+  FileText,
+  Megaphone,
 } from 'lucide-react';
 import {
   BarChart,
@@ -110,6 +116,28 @@ export const DashboardPage: React.FC = () => {
         {/* 1. SUPER ADMIN DASHBOARD VIEW */}
         {user.role === 'SUPER_ADMIN' && superAdminData && (
           <div className="space-y-6">
+            {/* Super Admin Quick Actions */}
+            <div className="flex flex-wrap items-center gap-3 p-4 rounded-2xl bg-gray-900/60 border border-gray-800">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider font-mono mr-2">Command Shortcuts:</span>
+              <Button size="sm" onClick={() => navigate('/structure')} className="gap-1.5 text-xs bg-purple-600 hover:bg-purple-500">
+                <School className="h-3.5 w-3.5" /> School Structure
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate('/admissions')} className="gap-1.5 text-xs">
+                <UserPlus className="h-3.5 w-3.5 text-blue-400" /> Admissions
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate('/teachers')} className="gap-1.5 text-xs">
+                <UserCheck className="h-3.5 w-3.5 text-emerald-400" /> Faculty Roster
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate('/audit-logs')} className="gap-1.5 text-xs">
+                <Activity className="h-3.5 w-3.5 text-rose-400" /> Audit Ledger
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate('/reports')} className="gap-1.5 text-xs">
+                <FileText className="h-3.5 w-3.5 text-amber-400" /> Reports
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate('/settings')} className="gap-1.5 text-xs">
+                <Settings className="h-3.5 w-3.5 text-purple-400" /> Settings
+              </Button>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="border-gray-800 bg-gray-900/50">
                 <CardContent className="p-4 flex items-center justify-between">

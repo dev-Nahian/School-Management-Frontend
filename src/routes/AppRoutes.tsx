@@ -26,6 +26,7 @@ const LeaveManagementPage = lazy(() => import('../pages/LeaveManagementPage').th
 const ReportsPage = lazy(() => import('../pages/ReportsPage').then((m) => ({ default: m.ReportsPage })));
 const DocumentsPage = lazy(() => import('../pages/DocumentsPage').then((m) => ({ default: m.DocumentsPage })));
 const AuditLogsPage = lazy(() => import('../pages/AuditLogsPage').then((m) => ({ default: m.AuditLogsPage })));
+const SettingsPage = lazy(() => import('../pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 
 const RouteLoadingFallback: React.FC = () => (
   <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in">
@@ -279,7 +280,7 @@ export const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute>
               <RoleGuard allowedRoles={['SUPER_ADMIN']}>
-                <DashboardPage />
+                <SettingsPage />
               </RoleGuard>
             </ProtectedRoute>
           }

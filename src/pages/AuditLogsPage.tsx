@@ -15,6 +15,9 @@ import {
   ChevronRight,
   Lock,
   Activity,
+  Download,
+  X,
+  FileJson,
 } from 'lucide-react';
 
 import { Breadcrumbs } from '../components/ui/Breadcrumbs';
@@ -24,6 +27,7 @@ export const AuditLogsPage: React.FC = () => {
   const [actionQuery, setActionQuery] = useState<string>('');
   const [entityFilter, setEntityFilter] = useState<string>('');
   const [page, setPage] = useState<number>(1);
+  const [selectedLogPayload, setSelectedLogPayload] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['audit-logs', actionQuery, entityFilter, page],
@@ -44,6 +48,32 @@ export const AuditLogsPage: React.FC = () => {
     if (action.includes('DELETE') || action.includes('REJECT')) return 'error';
     if (action.includes('UPDATE') || action.includes('MODIFY')) return 'warning';
     return 'purple';
+  };
+
+  const handleExportCSV = () => {
+    if (!logs.length) return;
+    const headers = ['Timestamp', 'Actor', 'Role', 'Action', 'Entity', 'Entity ID', 'Details'];
+    const rows = logs.map((l: any) => [
+      new Date(l.createdAt).toISOString(),
+      l.user ? `${l.user.firstName} ${l.user.lastName}` : 'System',
+      l.user ? l.user.role : 'N/A',
+      l.action,
+      l.entity,
+      l.entityId || '',
+      l.details ? JSON.stringify(l.details).replace(/"/g, '""') : '',
+    ]);
+
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...rows.map((r: any) => r.map((field: string) => `"${field}"`).join(','))].join('\n');
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `audit_logs_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (!user) return null;
@@ -67,9 +97,14 @@ export const AuditLogsPage: React.FC = () => {
                 Immutable, tamper-evident transaction logs capturing creation, modifications, permissions, and status updates across the platform.
               </p>
             </div>
-            <div className="flex items-center gap-2 bg-rose-500/10 px-3 py-1.5 rounded-2xl border border-rose-500/20">
-              <Lock className="h-4 w-4 text-rose-400" />
-              <span className="text-xs text-rose-300 font-mono font-bold">Uneditable Audit Standard</span>
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={handleExportCSV} variant="outline" className="gap-1.5 text-xs">
+                <Download className="h-4 w-4 text-purple-400" /> Export CSV
+              </Button>
+              <div className="flex items-center gap-2 bg-rose-500/10 px-3 py-1.5 rounded-2xl border border-rose-500/20">
+                <Lock className="h-4 w-4 text-rose-400" />
+                <span className="text-xs text-rose-300 font-mono font-bold">Uneditable Audit Standard</span>
+              </div>
             </div>
           </div>
         </div>
@@ -191,9 +226,14 @@ export const AuditLogsPage: React.FC = () => {
 
                         <td className="p-3.5">
                           {log.details ? (
-                            <div className="max-w-xs truncate bg-gray-950 p-1.5 rounded border border-gray-800 text-[10px] text-gray-300 font-mono">
-                              {JSON.stringify(log.details)}
-                            </div>
+                            <button
+                              onClick={() => setSelectedLogPayload(log)}
+                              className="max-w-xs truncate bg-gray-950 hover:bg-gray-800/80 p-1.5 rounded border border-gray-800 text-[10px] text-purple-300 font-mono flex items-center gap-1 text-left transition-colors"
+                              title="Click to inspect full payload"
+                            >
+                              <FileJson className="h-3 w-3 text-purple-400 shrink-0" />
+                              <span className="truncate">{JSON.stringify(log.details)}</span>
+                            </button>
                           ) : (
                             <span className="text-gray-600">-</span>
                           )}
@@ -232,6 +272,40 @@ export const AuditLogsPage: React.FC = () => {
               >
                 Next <ChevronRight className="h-4 w-4" />
               </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Payload Inspector Modal */}
+        {selectedLogPayload && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="w-full max-w-2xl glass-panel p-6 rounded-3xl border border-purple-500/30 space-y-4 bg-gray-900 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <FileJson className="h-5 w-5 text-purple-400" />
+                  <div>
+                    <h3 className="text-base font-bold text-white">Audit Transaction Metadata Payload</h3>
+                    <p className="text-xs text-gray-400 font-mono">
+                      Action: {selectedLogPayload.action} • Log ID: {selectedLogPayload.id}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedLogPayload(null)} className="text-gray-400 hover:text-white">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="bg-gray-950 p-4 rounded-2xl border border-gray-800 max-h-96 overflow-y-auto">
+                <pre className="text-xs text-purple-200 font-mono whitespace-pre-wrap">
+                  {JSON.stringify(selectedLogPayload.details, null, 2)}
+                </pre>
+              </div>
+
+              <div className="flex justify-end pt-2 border-t border-gray-800">
+                <Button size="sm" onClick={() => setSelectedLogPayload(null)}>
+                  Close Inspector
+                </Button>
+              </div>
             </div>
           </div>
         )}
