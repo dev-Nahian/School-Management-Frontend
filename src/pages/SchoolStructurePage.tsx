@@ -296,7 +296,7 @@ export const SchoolStructurePage: React.FC = () => {
                   <Calendar className="h-4 w-4" /> Add Session
                 </Button>
 
-                <Button size="sm" variant="purple" onClick={() => setIsAssignModalOpen(true)} className="gap-1.5 text-xs">
+                <Button size="sm" variant="primary" onClick={() => setIsAssignModalOpen(true)} className="gap-1.5 text-xs">
                   <UserCheck className="h-4 w-4" /> Assign Teacher
                 </Button>
               </div>
