@@ -28,7 +28,7 @@ export const TimetablePage: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMISSION_ADMIN';
 
   // Filters State
   const [selectedClassId, setSelectedClassId] = useState('');

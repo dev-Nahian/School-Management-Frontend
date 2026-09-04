@@ -28,7 +28,7 @@ export const ExamManagementPage: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMISSION_ADMIN';
 
   // Active View Tab
   const [activeTab, setActiveTab] = useState<'gradebook' | 'schedules' | 'results'>('gradebook');

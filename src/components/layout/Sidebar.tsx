@@ -92,7 +92,7 @@ const navItems: NavItem[] = [
     title: 'Timetable Schedule',
     href: '/timetable',
     icon: Calendar,
-    roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
+    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
   },
   {
     title: 'Announcements',
@@ -104,13 +104,13 @@ const navItems: NavItem[] = [
     title: 'Library Desk',
     href: '/library',
     icon: Library,
-    roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
+    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
   },
   {
     title: 'Leave Management',
     href: '/leave',
     icon: CalendarOff,
-    roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
+    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
   },
   {
     title: 'Reports Center',

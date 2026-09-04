@@ -63,7 +63,7 @@ export const SchoolStructurePage: React.FC = () => {
   const [assignSubjectId, setAssignSubjectId] = useState('');
   const [assignSectionId, setAssignSectionId] = useState('');
 
-  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMISSION_ADMIN';
 
   // React Queries
   const { data: years = [] } = useQuery({
