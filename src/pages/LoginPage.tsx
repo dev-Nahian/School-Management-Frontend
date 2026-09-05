@@ -204,7 +204,7 @@ export const LoginPage: React.FC = () => {
 
               <div className="p-3 rounded-xl bg-gray-950/50 border border-gray-800 text-[11px] text-gray-400 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <Key className="h-3.5 w-3.5 text-purple-400" /> Safe Bcrypt Hashing Active
+                  <Key className="h-3.5 w-3.5 text-purple-400" /> Safe Bcrypt Hashing Actives
                 </span>
                 <span className="font-mono text-purple-300">JWT Token Rotation</span>
               </div>
