@@ -8,18 +8,13 @@ import { Button } from '../components/ui/button';
 import { Breadcrumbs } from '../components/ui/Breadcrumbs';
 import {
   Settings,
-  ShieldCheck,
-  Server,
   Lock,
   Bell,
   Database,
   RefreshCw,
   Save,
   CheckCircle,
-  AlertTriangle,
   Globe,
-  Sliders,
-  Radio,
 } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {

@@ -385,8 +385,8 @@ export const ExamManagementPage: React.FC = () => {
                       <tbody className="divide-y divide-gray-800/60">
                         {studentsList.map((stu: any) => {
                           const userEntry = marksMap[stu.id] || {
-                            writtenMarks: 75,
-                            mcqMarks: 25,
+                            writtenMarks: 0,
+                            mcqMarks: 0,
                             practicalMarks: 0,
                             remarks: '',
                           };

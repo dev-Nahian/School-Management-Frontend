@@ -25,9 +25,7 @@ import {
   School,
   Activity,
   Settings,
-  ShieldCheck,
   FileText,
-  Megaphone,
 } from 'lucide-react';
 import {
   BarChart,
@@ -301,15 +299,21 @@ export const DashboardPage: React.FC = () => {
         {user.role === 'TEACHER' && teacherData && (
           <div className="space-y-6">
             {/* Quick Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button size="sm" onClick={() => navigate('/teachers')} className="gap-1.5 text-xs bg-purple-600 hover:bg-purple-500">
+                <UserCheck className="h-4 w-4" /> Educator Workbench
+              </Button>
               <Button size="sm" onClick={() => navigate('/attendance')} className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-500">
                 <ClipboardList className="h-4 w-4" /> Take Class Attendance
               </Button>
-              <Button size="sm" onClick={() => navigate('/exams')} className="gap-1.5 text-xs bg-purple-600 hover:bg-purple-500">
+              <Button size="sm" onClick={() => navigate('/exams')} className="gap-1.5 text-xs bg-indigo-600 hover:bg-indigo-500">
                 <Award className="h-4 w-4" /> Enter Marks
               </Button>
               <Button size="sm" variant="outline" onClick={() => navigate('/assignments')} className="gap-1.5 text-xs">
-                <Plus className="h-4 w-4" /> Create Homework
+                <Plus className="h-4 w-4" /> Homework
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate('/timetable')} className="gap-1.5 text-xs">
+                <School className="h-4 w-4 text-amber-400" /> Timetable
               </Button>
             </div>
 

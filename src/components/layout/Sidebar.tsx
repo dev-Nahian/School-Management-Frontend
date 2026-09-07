@@ -59,10 +59,10 @@ const navItems: NavItem[] = [
     roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE'],
   },
   {
-    title: 'Teacher Roster',
+    title: 'Educator Workbench',
     href: '/teachers',
     icon: Users,
-    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'FINANCE'],
+    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE'],
   },
   {
     title: 'Attendance Desk',

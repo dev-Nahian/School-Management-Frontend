@@ -30,7 +30,6 @@ import {
   Filter,
   PieChart,
   Building2,
-  CheckCircle2,
 } from 'lucide-react';
 import { Breadcrumbs } from '../components/ui/Breadcrumbs';
 import type { InvoiceModel, PaymentMethod, FeeType, ExpenseCategory, ExpenseModel } from '../services/finance.service';

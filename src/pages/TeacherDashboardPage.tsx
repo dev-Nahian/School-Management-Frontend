@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -19,10 +20,13 @@ import {
   X,
   Layers,
   Users,
+  CalendarCheck,
+  Calendar,
 } from 'lucide-react';
 
 export const TeacherDashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const isSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMISSION_ADMIN';
@@ -125,7 +129,7 @@ export const TeacherDashboardPage: React.FC = () => {
               </p>
             </div>
 
-            {isSuperAdmin && (
+            {isSuperAdmin ? (
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" onClick={() => setIsAddTeacherOpen(true)} className="gap-1.5 text-xs">
                   <Plus className="h-4 w-4" /> Add New Educator
@@ -133,6 +137,21 @@ export const TeacherDashboardPage: React.FC = () => {
 
                 <Button size="sm" variant="outline" onClick={() => setIsAssignOpen(true)} className="gap-1.5 text-xs">
                   <Layers className="h-4 w-4 text-purple-400" /> Assign Class & Subject
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={() => navigate('/attendance')} className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-500">
+                  <CalendarCheck className="h-4 w-4" /> Attendance Desk
+                </Button>
+                <Button size="sm" onClick={() => navigate('/exams')} className="gap-1.5 text-xs bg-purple-600 hover:bg-purple-500">
+                  <Award className="h-4 w-4" /> Gradebook
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => navigate('/assignments')} className="gap-1.5 text-xs">
+                  <FileText className="h-4 w-4 text-sky-400" /> Homework
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => navigate('/timetable')} className="gap-1.5 text-xs">
+                  <Calendar className="h-4 w-4 text-indigo-400" /> Timetable
                 </Button>
               </div>
             )}
@@ -264,10 +283,17 @@ export const TeacherDashboardPage: React.FC = () => {
                 {(dashboard?.assignedClasses || []).map((cls) => (
                   <div
                     key={cls.id}
-                    className="p-3 rounded-2xl bg-gray-950/60 border border-gray-800 flex items-center justify-between"
+                    className="p-3 rounded-2xl bg-gray-950/60 border border-gray-800 flex items-center justify-between hover:border-purple-500/30 transition-all"
                   >
-                    <span className="font-bold text-white">{cls.name}</span>
-                    <span className="text-purple-300 font-mono text-[10px]">{cls.studentCount} Students</span>
+                    <div className="space-y-0.5">
+                      <span className="font-bold text-white block">{cls.name.replace(' (Class Educator)', '')}</span>
+                      {cls.name.includes('(Class Educator)') && (
+                        <Badge variant="purple" className="text-[9px] gap-1 font-mono">
+                          <UserCheck className="h-2.5 w-2.5" /> Class Educator
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-purple-300 font-mono text-[10px] shrink-0">{cls.studentCount} Students</span>
                   </div>
                 ))}
               </CardContent>
