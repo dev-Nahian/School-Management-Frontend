@@ -444,7 +444,7 @@ export const ExamManagementPage: React.FC = () => {
                                   className="w-16 px-2 py-1 rounded-lg bg-gray-950 border border-gray-800 text-white font-mono text-xs text-center"
                                 />
                               </td>
-                              <td className="p-3 font-mono font-bold text-white">${liveRes.total} / 100</td>
+                              <td className="p-3 font-mono font-bold text-white">{liveRes.total} / 100</td>
                               <td className="p-3">
                                 <Badge
                                   variant={liveRes.grade === 'F' ? 'error' : 'success'}

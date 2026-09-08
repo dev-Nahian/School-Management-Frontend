@@ -59,6 +59,18 @@ export const AttendancePage: React.FC = () => {
     enabled: Boolean(selectedSectionId),
   });
 
+  // Populate existing records into form map when section data loads
+  React.useEffect(() => {
+    if (sectionData?.students) {
+      const initialMap: Record<string, AttendanceStatusType> = {};
+      const existingMap = new Map((sectionData.existingRecords || []).map((r: any) => [r.studentId, r.status]));
+      sectionData.students.forEach((st) => {
+        initialMap[st.id] = (existingMap.get(st.id) as AttendanceStatusType) || 'PRESENT';
+      });
+      setAttendanceMap(initialMap);
+    }
+  }, [sectionData]);
+
   // Handle Mark All Present
   const handleMarkAllPresent = () => {
     if (!sectionData?.students) return;
