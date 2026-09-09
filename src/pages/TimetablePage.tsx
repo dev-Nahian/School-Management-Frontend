@@ -82,6 +82,7 @@ export const TimetablePage: React.FC = () => {
   const { data: teachers = [] } = useQuery({
     queryKey: ['teachersTimetable'],
     queryFn: teacherService.getTeachers,
+    enabled: isSuperAdmin,
   });
 
   const modalSections = (allSections as any[]).filter(

@@ -72,6 +72,7 @@ export const LibraryPage: React.FC = () => {
   const { data: students = [] } = useQuery({
     queryKey: ['studentsForLibraryIssue'],
     queryFn: () => studentService.getStudents(),
+    enabled: isSuperAdmin,
   });
 
   // Mutations

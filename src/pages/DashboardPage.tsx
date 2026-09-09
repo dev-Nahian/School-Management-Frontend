@@ -26,6 +26,12 @@ import {
   Activity,
   Settings,
   FileText,
+  Calendar,
+  CalendarCheck,
+  Megaphone,
+  CalendarOff,
+  ArrowRight,
+  User,
 } from 'lucide-react';
 import {
   BarChart,
@@ -397,37 +403,215 @@ export const DashboardPage: React.FC = () => {
         )}
 
         {/* 5. STUDENT DASHBOARD VIEW */}
-        {user.role === 'STUDENT' && studentData && (
+        {user.role === 'STUDENT' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            {/* Student Identity Card & Shortcuts Banner */}
+            <div className="p-4 rounded-2xl bg-gray-900/60 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-purple-500/20 text-lg">
+                  {user.firstName?.charAt(0)}
+                  {user.lastName?.charAt(0)}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-white">
+                      {user.firstName} {user.lastName}
+                    </h3>
+                    <Badge variant="purple" className="text-[10px] font-mono">
+                      {studentData?.student?.studentId || 'STUDENT'}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-gray-400 font-mono mt-0.5">
+                    Class: <span className="text-purple-300 font-semibold">{studentData?.student?.class?.name || 'Grade 8'}</span> •
+                    Section: <span className="text-sky-300 font-semibold">{studentData?.student?.section?.name || 'A'}</span> •
+                    Roll: <span className="text-emerald-300 font-semibold">{studentData?.student?.rollNumber || '01'}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Student Quick Action Buttons */}
+              <div className="flex flex-wrap items-center gap-2">
+                <Button size="sm" onClick={() => navigate('/students/me')} className="gap-1.5 text-xs bg-purple-600 hover:bg-purple-500">
+                  <User className="h-3.5 w-3.5" /> Full Profile
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => navigate('/attendance')} className="gap-1.5 text-xs">
+                  <CalendarCheck className="h-3.5 w-3.5 text-emerald-400" /> My Attendance
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => navigate('/results')} className="gap-1.5 text-xs">
+                  <Award className="h-3.5 w-3.5 text-amber-400" /> Exam Results
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => navigate('/assignments')} className="gap-1.5 text-xs">
+                  <BookOpen className="h-3.5 w-3.5 text-blue-400" /> Homework
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => navigate('/timetable')} className="gap-1.5 text-xs">
+                  <Calendar className="h-3.5 w-3.5 text-indigo-400" /> Timetable
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => navigate('/leave')} className="gap-1.5 text-xs">
+                  <CalendarOff className="h-3.5 w-3.5 text-rose-400" /> Apply Leave
+                </Button>
+              </div>
+            </div>
+
+            {/* Metric KPI Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="border-gray-800 bg-gray-900/50">
-                <CardContent className="p-4 text-center">
-                  <p className="text-xs text-gray-400">Attendance Rate</p>
-                  <h3 className="text-2xl font-bold text-emerald-400 mt-1 font-mono">{studentData.attendancePercentage}%</h3>
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium">Attendance Rate</p>
+                    <h3 className="text-2xl font-extrabold text-emerald-400 mt-1 font-mono">
+                      {studentData?.attendancePercentage ?? 100}%
+                    </h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <CalendarCheck className="h-6 w-6" />
+                  </div>
                 </CardContent>
               </Card>
 
               <Card className="border-gray-800 bg-gray-900/50">
-                <CardContent className="p-4 text-center">
-                  <p className="text-xs text-gray-400">Cumulative GPA</p>
-                  <h3 className="text-2xl font-bold text-purple-400 mt-1 font-mono">{studentData.gpa} / 5.0</h3>
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium">Cumulative GPA</p>
+                    <h3 className="text-2xl font-extrabold text-purple-400 mt-1 font-mono">
+                      {studentData?.gpa ?? 0.0} / 5.0
+                    </h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                    <Award className="h-6 w-6" />
+                  </div>
                 </CardContent>
               </Card>
 
               <Card className="border-gray-800 bg-gray-900/50">
-                <CardContent className="p-4 text-center">
-                  <p className="text-xs text-gray-400">Pending Homework</p>
-                  <h3 className="text-2xl font-bold text-blue-400 mt-1 font-mono">{studentData.assignments?.length || 0}</h3>
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium">Homework Tasks</p>
+                    <h3 className="text-2xl font-extrabold text-blue-400 mt-1 font-mono">
+                      {studentData?.assignments?.length || 0}
+                    </h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <BookOpen className="h-6 w-6" />
+                  </div>
                 </CardContent>
               </Card>
 
               <Card className="border-gray-800 bg-gray-900/50">
-                <CardContent className="p-4 text-center">
-                  <p className="text-xs text-gray-400">Invoices</p>
-                  <h3 className="text-2xl font-bold text-amber-400 mt-1 font-mono">{studentData.invoices?.length || 0}</h3>
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium">Fee Invoices</p>
+                    <h3 className="text-2xl font-extrabold text-amber-400 mt-1 font-mono">
+                      {studentData?.invoices?.length || 0}
+                    </h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <CreditCard className="h-6 w-6" />
+                  </div>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Assignments & Upcoming Exams */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Homework Tasks List */}
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-blue-400" /> Active Homework & Assignments
+                  </CardTitle>
+                  <Button size="sm" variant="ghost" onClick={() => navigate('/assignments')} className="text-xs text-purple-400 hover:text-purple-300">
+                    View All <ArrowRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-gray-800 text-xs">
+                    {!studentData?.assignments || studentData.assignments.length === 0 ? (
+                      <p className="p-6 text-center text-gray-500">No active homework tasks assigned.</p>
+                    ) : (
+                      studentData.assignments.map((asg: any) => (
+                        <div key={asg.id} className="p-3.5 flex items-center justify-between hover:bg-gray-800/30 transition-colors">
+                          <div className="space-y-0.5">
+                            <p className="font-bold text-white">{asg.title}</p>
+                            <p className="text-[11px] text-gray-400 font-mono">
+                              {asg.subject?.name || 'Subject'} • Total: {asg.totalPoints} pts
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <Badge variant={new Date() > new Date(asg.dueDate) ? 'error' : 'purple'} className="text-[10px]">
+                              Due {new Date(asg.dueDate).toLocaleDateString()}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Upcoming Exam Schedules */}
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <Award className="h-4 w-4 text-amber-400" /> Upcoming Exam Schedules
+                  </CardTitle>
+                  <Button size="sm" variant="ghost" onClick={() => navigate('/results')} className="text-xs text-purple-400 hover:text-purple-300">
+                    Results <ArrowRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-gray-800 text-xs">
+                    {!studentData?.upcomingExams || studentData.upcomingExams.length === 0 ? (
+                      <p className="p-6 text-center text-gray-500">No upcoming exams scheduled at this time.</p>
+                    ) : (
+                      studentData.upcomingExams.map((sch: any) => (
+                        <div key={sch.id} className="p-3.5 flex items-center justify-between hover:bg-gray-800/30 transition-colors">
+                          <div className="space-y-0.5">
+                            <p className="font-bold text-white">{sch.subject?.name}</p>
+                            <p className="text-[11px] text-gray-400 font-mono">
+                              {sch.exam?.title} • Full: {sch.fullMarks} / Pass: {sch.passMarks}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <Badge variant="info" className="text-[10px] font-mono">
+                              {sch.examDate ? new Date(sch.examDate).toLocaleDateString() : 'Scheduled'}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* School Broadcast Notices */}
+            {studentData?.announcements && studentData.announcements.length > 0 && (
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <Megaphone className="h-4 w-4 text-purple-400" /> Recent Institutional Notices
+                  </CardTitle>
+                  <Button size="sm" variant="ghost" onClick={() => navigate('/announcements')} className="text-xs text-purple-400 hover:text-purple-300">
+                    Announcements <ArrowRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-gray-800 text-xs">
+                    {studentData.announcements.map((anc: any) => (
+                      <div key={anc.id} className="p-3.5 flex items-start justify-between gap-4 hover:bg-gray-800/30 transition-colors">
+                        <div>
+                          <p className="font-bold text-white">{anc.title}</p>
+                          <p className="text-gray-400 line-clamp-1 mt-0.5 text-[11px]">{anc.description}</p>
+                        </div>
+                        <Badge variant="purple" className="text-[10px] shrink-0 font-mono">
+                          {new Date(anc.publishDate).toLocaleDateString()}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 

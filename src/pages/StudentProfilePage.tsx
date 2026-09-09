@@ -5,6 +5,7 @@ import { Sidebar } from '../components/layout/Sidebar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { useAuth } from '../context/AuthContext';
 import { studentService } from '../services/student.service';
 import { attendanceService } from '../services/attendance.service';
 import { financeService } from '../services/finance.service';
@@ -31,6 +32,8 @@ import type { StudentStatus } from '../types/student';
 export const StudentProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isStudent = user?.role === 'STUDENT';
   const [activeTab, setActiveTab] = useState<
     'overview' | 'academic' | 'attendance' | 'results' | 'fees' | 'assignments' | 'documents'
   >('overview');
@@ -39,19 +42,19 @@ export const StudentProfilePage: React.FC = () => {
 
   const { data: student, isLoading, error } = useQuery({
     queryKey: ['student', id],
-    queryFn: () => studentService.getStudentById(id || 'stu-01'),
+    queryFn: () => studentService.getStudentById(id || 'me'),
     enabled: Boolean(id),
   });
 
   const { data: attendanceHistory } = useQuery({
     queryKey: ['studentAttendanceHistory', id],
-    queryFn: () => attendanceService.getStudentAttendanceHistory(id || 'stu-01'),
+    queryFn: () => attendanceService.getStudentAttendanceHistory(id || 'me'),
     enabled: Boolean(id) && activeTab === 'attendance',
   });
 
   const { data: studentInvoices = [] } = useQuery({
     queryKey: ['studentInvoices', id],
-    queryFn: () => financeService.getInvoices(id),
+    queryFn: () => financeService.getInvoices(id === 'me' ? undefined : id),
     enabled: Boolean(id) && activeTab === 'fees',
   });
 
@@ -71,8 +74,13 @@ export const StudentProfilePage: React.FC = () => {
       <div className="flex flex-col lg:flex-row gap-6">
         <Sidebar />
         <div className="flex-1 space-y-4">
-          <Button variant="outline" size="sm" onClick={() => navigate('/students')} className="gap-2">
-            <ArrowLeft className="h-4 w-4" /> Back to Student Roster
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(isStudent ? '/dashboard' : '/students')}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" /> {isStudent ? 'Back to Dashboard' : 'Back to Student Roster'}
           </Button>
           <Card className="border-red-500/30 bg-red-950/10 p-6 text-center">
             <h3 className="text-lg font-bold text-red-400">Student Record Restricted or Not Found</h3>
@@ -111,8 +119,13 @@ export const StudentProfilePage: React.FC = () => {
       <div className="flex-1 space-y-6">
         {/* Back Link */}
         <div>
-          <Button variant="outline" size="sm" onClick={() => navigate('/students')} className="gap-2 text-xs">
-            <ArrowLeft className="h-4 w-4" /> Back to Students Directory
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(isStudent ? '/dashboard' : '/students')}
+            className="gap-2 text-xs"
+          >
+            <ArrowLeft className="h-4 w-4" /> {isStudent ? 'Back to Dashboard' : 'Back to Students Directory'}
           </Button>
         </div>
 

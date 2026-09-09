@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { LogOut, KeyRound, Shield } from 'lucide-react';
+import { LogOut, KeyRound, Shield, User } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { useNavigate } from 'react-router-dom';
 
@@ -72,6 +72,18 @@ export const UserNav: React.FC = () => {
           </div>
 
           <div className="py-1">
+            {user.role === 'STUDENT' && (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate('/students/me');
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-purple-300 hover:text-white hover:bg-gray-800/60 rounded-xl transition-colors"
+              >
+                <User className="h-4 w-4 text-purple-400" />
+                <span>My Student Profile</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 setIsOpen(false);

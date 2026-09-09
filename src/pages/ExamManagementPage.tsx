@@ -29,9 +29,12 @@ export const ExamManagementPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   const isSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMISSION_ADMIN';
+  const isStudent = user?.role === 'STUDENT';
 
   // Active View Tab
-  const [activeTab, setActiveTab] = useState<'gradebook' | 'schedules' | 'results'>('gradebook');
+  const [activeTab, setActiveTab] = useState<'gradebook' | 'schedules' | 'results' | 'my_results'>(
+    user?.role === 'STUDENT' ? 'my_results' : 'gradebook'
+  );
 
   // Modals
   const [isCreateExamOpen, setIsCreateExamOpen] = useState(false);
@@ -67,24 +70,34 @@ export const ExamManagementPage: React.FC = () => {
     queryFn: examService.getExams,
   });
 
+  const { data: myReportCard, isLoading: isLoadingMyReport } = useQuery({
+    queryKey: ['myStudentReportCard', selectedExamId],
+    queryFn: () => examService.getStudentReportCard('me', selectedExamId || undefined),
+    enabled: isStudent,
+  });
+
   const { data: classes = [] } = useQuery({
     queryKey: ['classesExam'],
     queryFn: schoolStructureService.getClasses,
+    enabled: !isStudent,
   });
 
   const { data: academicYears = [] } = useQuery({
     queryKey: ['academicYearsExam'],
     queryFn: schoolStructureService.getAcademicYears,
+    enabled: !isStudent,
   });
 
   const { data: allSections = [] } = useQuery({
     queryKey: ['sectionsExam'],
     queryFn: schoolStructureService.getSections,
+    enabled: !isStudent,
   });
 
   const { data: allSubjects = [] } = useQuery({
     queryKey: ['subjectsExam'],
     queryFn: schoolStructureService.getSubjects,
+    enabled: !isStudent,
   });
 
   const classSections = (allSections as any[]).filter(
@@ -101,7 +114,7 @@ export const ExamManagementPage: React.FC = () => {
         classId: selectedClassId,
         sectionId: selectedSectionId,
       }),
-    enabled: Boolean(selectedClassId && selectedSectionId),
+    enabled: !isStudent && Boolean(selectedClassId && selectedSectionId),
   });
 
   const studentsList = Array.isArray(studentRoster)
@@ -233,11 +246,17 @@ export const ExamManagementPage: React.FC = () => {
 
         {/* View Navigation Tabs */}
         <div className="flex items-center gap-2 border-b border-gray-800 pb-3">
-          {[
-            { id: 'gradebook', label: 'Teacher Gradebook / Mark Entry', icon: FileCheck2 },
-            { id: 'schedules', label: 'Exam Schedules & Full Marks', icon: Calendar },
-            { id: 'results', label: 'Student Report Cards', icon: GraduationCap },
-          ].map((tab) => {
+          {(isStudent
+            ? [
+                { id: 'my_results', label: 'My Academic Report Card', icon: GraduationCap },
+                { id: 'schedules', label: 'Exam Schedules & Subjects', icon: Calendar },
+              ]
+            : [
+                { id: 'gradebook', label: 'Teacher Gradebook / Mark Entry', icon: FileCheck2 },
+                { id: 'schedules', label: 'Exam Schedules & Full Marks', icon: Calendar },
+                { id: 'results', label: 'Student Report Cards Directory', icon: GraduationCap },
+              ]
+          ).map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
@@ -255,6 +274,166 @@ export const ExamManagementPage: React.FC = () => {
             );
           })}
         </div>
+
+        {/* TAB: STUDENT PERSONAL REPORT CARD */}
+        {activeTab === 'my_results' && (
+          <div className="space-y-6">
+            {/* Exam Term Selector & Print Header */}
+            <Card className="border-gray-800 bg-gray-900/60 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex-1 max-w-sm">
+                  <label className="text-gray-300 font-semibold block text-xs mb-1">Select Examination Term</label>
+                  <select
+                    value={selectedExamId}
+                    onChange={(e) => setSelectedExamId(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs font-medium"
+                  >
+                    <option value="">All / Latest Completed Exam</option>
+                    {exams.map((ex) => (
+                      <option key={ex.id} value={ex.id}>
+                        {ex.title} ({ex.term})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (myReportCard) {
+                      setSelectedStudentReport(myReportCard);
+                      setIsReportCardModalOpen(true);
+                    }
+                  }}
+                  disabled={!myReportCard}
+                  className="gap-1.5 text-xs bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-600/20 self-end sm:self-center"
+                >
+                  <Printer className="h-4 w-4" /> Print Official Statement
+                </Button>
+              </div>
+            </Card>
+
+            {isLoadingMyReport ? (
+              <Card className="border-gray-800 p-8 text-center text-xs text-gray-400 font-mono">
+                Loading your official performance statement...
+              </Card>
+            ) : !myReportCard || !myReportCard.markEntries || myReportCard.markEntries.length === 0 ? (
+              <Card className="border-gray-800 p-8 text-center bg-gray-900/40">
+                <Award className="h-10 w-10 text-purple-400 mx-auto mb-2 opacity-50" />
+                <CardTitle className="text-base text-gray-200">No Examination Marks Recorded Yet</CardTitle>
+                <CardDescription className="text-xs max-w-sm mx-auto mt-1">
+                  Marks will appear here as soon as teachers grade your written, MCQ, and practical exam papers.
+                </CardDescription>
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                {/* Result KPI Overview Summary */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Card className="border-gray-800 bg-gray-900/60">
+                    <CardContent className="p-4 text-center">
+                      <span className="text-xs text-gray-400 font-medium">Cumulative GPA</span>
+                      <h3 className="text-2xl font-extrabold text-purple-400 mt-1 font-mono">
+                        {myReportCard.summary?.overallGPA?.toFixed(2) || '0.00'} / 5.0
+                      </h3>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-gray-800 bg-gray-900/60">
+                    <CardContent className="p-4 text-center">
+                      <span className="text-xs text-gray-400 font-medium">Total Marks Scored</span>
+                      <h3 className="text-2xl font-extrabold text-emerald-400 mt-1 font-mono">
+                        {myReportCard.summary?.totalObtainedMarks} / {myReportCard.summary?.totalPossibleMarks}
+                      </h3>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-gray-800 bg-gray-900/60">
+                    <CardContent className="p-4 text-center">
+                      <span className="text-xs text-gray-400 font-medium">Percentage</span>
+                      <h3 className="text-2xl font-extrabold text-blue-400 mt-1 font-mono">
+                        {myReportCard.summary?.averagePercentage}%
+                      </h3>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-gray-800 bg-gray-900/60">
+                    <CardContent className="p-4 text-center">
+                      <span className="text-xs text-gray-400 font-medium">Overall Standing</span>
+                      <div className="mt-1">
+                        <Badge
+                          variant={myReportCard.summary?.resultStatus === 'PASSED' ? 'success' : 'error'}
+                          className="text-xs font-mono font-bold uppercase px-3 py-1"
+                        >
+                          {myReportCard.summary?.resultStatus === 'PASSED' ? 'PASSED' : 'NEEDS IMPROVEMENT'}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Subject Breakdown Table */}
+                <Card className="border-gray-800">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5 text-purple-400" /> Subject-Wise Performance Breakdown
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Enrolled Class: {myReportCard.student?.class?.name || 'Enrolled Class'} ({myReportCard.student?.section?.name || 'Section'}) • ID: {myReportCard.student?.studentId || 'N/A'} • Roll No: {myReportCard.student?.rollNumber || 'N/A'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-gray-950/70 text-gray-400 font-semibold border-b border-gray-800">
+                          <tr>
+                            <th className="p-3">Subject</th>
+                            <th className="p-3 text-center">Written (Max 70)</th>
+                            <th className="p-3 text-center">MCQ (Max 30)</th>
+                            <th className="p-3 text-center">Practical</th>
+                            <th className="p-3 text-center">Total Marks</th>
+                            <th className="p-3 text-center">Grade</th>
+                            <th className="p-3 text-center">Grade Point</th>
+                            <th className="p-3">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-800/60">
+                          {myReportCard.markEntries.map((sub: any) => (
+                            <tr key={sub.id} className="hover:bg-gray-800/30 transition-colors">
+                              <td className="p-3 font-bold text-white">
+                                <div>{sub.subject?.name}</div>
+                                <span className="text-[10px] text-gray-500 font-mono">{sub.subject?.code}</span>
+                              </td>
+                              <td className="p-3 text-center font-mono text-gray-300">{sub.writtenMarks ?? '-'}</td>
+                              <td className="p-3 text-center font-mono text-gray-300">{sub.mcqMarks ?? '-'}</td>
+                              <td className="p-3 text-center font-mono text-gray-300">{sub.practicalMarks ?? '-'}</td>
+                              <td className="p-3 text-center font-mono font-bold text-emerald-400">{sub.totalMarks} / 100</td>
+                              <td className="p-3 text-center">
+                                <Badge
+                                  variant={sub.grade === 'F' ? 'error' : 'purple'}
+                                  className="text-[10px] font-mono font-bold"
+                                >
+                                  {sub.grade}
+                                </Badge>
+                              </td>
+                              <td className="p-3 text-center font-mono font-bold text-purple-300">
+                                {sub.gpa?.toFixed(1) || '0.0'}
+                              </td>
+                              <td className="p-3">
+                                <Badge variant={sub.isPassed ? 'success' : 'error'} className="text-[10px]">
+                                  {sub.isPassed ? 'PASSED' : 'FAILED'}
+                                </Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* TAB 1: TEACHER GRADEBOOK & MARK ENTRY */}
         {activeTab === 'gradebook' && (

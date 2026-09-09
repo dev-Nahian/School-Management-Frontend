@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Users,
   GraduationCap,
+  User,
   UserPlus,
   BookOpen,
   CalendarCheck,
@@ -39,6 +40,12 @@ const navItems: NavItem[] = [
     href: '/dashboard',
     icon: LayoutDashboard,
     roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE', 'STUDENT', 'PARENT'],
+  },
+  {
+    title: 'My Student Profile',
+    href: '/students/me',
+    icon: User,
+    roles: ['STUDENT'],
   },
   {
     title: 'School Structure',
@@ -80,7 +87,7 @@ const navItems: NavItem[] = [
     title: 'Finance & Invoicing',
     href: '/finance',
     icon: DollarSign,
-    roles: ['SUPER_ADMIN', 'FINANCE', 'PARENT'],
+    roles: ['SUPER_ADMIN', 'FINANCE', 'PARENT', 'STUDENT'],
   },
   {
     title: 'Assignments',

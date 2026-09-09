@@ -132,8 +132,12 @@ export const AssignmentPage: React.FC = () => {
     },
   });
 
-  const handleOpenSubmitModal = (assignment: AssignmentModel) => {
+  const handleOpenSubmitModal = (assignment: AssignmentModel, existingSubmission?: AssignmentSubmissionModel | null) => {
     setSelectedAssignment(assignment);
+    setSubmitForm({
+      submissionText: existingSubmission?.submissionText || '',
+      attachmentUrl: existingSubmission?.attachmentUrl || '',
+    });
     setIsSubmitModalOpen(true);
   };
 
@@ -202,7 +206,11 @@ export const AssignmentPage: React.FC = () => {
             </Card>
           ) : (
             assignments.map((asg) => {
-              const submission = asg.submissions && asg.submissions.length > 0 ? asg.submissions[0] : null;
+              const submission = asg.submissions && asg.submissions.length > 0
+                ? (isStudent
+                    ? asg.submissions.find((s: any) => s.student?.userId === user?.id || s.studentId === user?.id) || asg.submissions[0]
+                    : asg.submissions[0])
+                : null;
               const isPastDue = new Date() > new Date(asg.dueDate);
 
               return (
@@ -273,7 +281,7 @@ export const AssignmentPage: React.FC = () => {
                         {isStudent && submission?.status !== 'GRADED' && (
                           <Button
                             size="sm"
-                            onClick={() => handleOpenSubmitModal(asg)}
+                            onClick={() => handleOpenSubmitModal(asg, submission)}
                             className="w-full text-xs gap-1.5 mt-1"
                           >
                             <Upload className="h-3.5 w-3.5" /> {submission ? 'Update Submission' : 'Submit Homework'}
