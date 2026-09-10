@@ -171,7 +171,7 @@ export const TeacherDashboardPage: React.FC = () => {
                 <CardDescription className="text-xs">Timetable for today's active classes</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {(dashboard?.todaySchedule || []).map((sched) => (
+                {(dashboard?.todaySchedule || []).map((sched: any) => (
                   <div
                     key={sched.id}
                     className="p-3.5 rounded-2xl bg-gray-950/60 border border-gray-800 flex items-center justify-between hover:border-purple-500/30 transition-all"
@@ -188,9 +188,18 @@ export const TeacherDashboardPage: React.FC = () => {
                       </p>
                     </div>
 
-                    <Badge variant="success" className="text-[9px]">
-                      {sched.status}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => navigate(`/attendance?sectionId=${sched.sectionId || ''}&classId=${sched.classId || ''}`)}
+                        className="h-7 px-2.5 text-[10px] gap-1 bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm"
+                      >
+                        <CalendarCheck className="h-3 w-3" /> Mark Attendance
+                      </Button>
+                      <Badge variant="success" className="text-[9px]">
+                        {sched.status}
+                      </Badge>
+                    </div>
                   </div>
                 ))}
               </CardContent>
@@ -206,15 +215,27 @@ export const TeacherDashboardPage: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-xs">
-                  {(dashboard?.attendanceTasks || []).map((task) => (
+                  {(dashboard?.attendanceTasks || []).map((task: any) => (
                     <div
                       key={task.id}
                       className="p-2.5 rounded-xl bg-gray-950/60 border border-gray-800 flex items-center justify-between"
                     >
-                      <span className="font-semibold text-white">{task.className}</span>
-                      <Badge variant={task.status === 'COMPLETED' ? 'success' : 'warning'} className="text-[9px]">
-                        {task.status}
-                      </Badge>
+                      <div>
+                        <span className="font-semibold text-white block">{task.className}</span>
+                        <span className="text-[10px] text-gray-400 font-mono">{task.date}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          size="sm"
+                          onClick={() => navigate(`/attendance?sectionId=${task.sectionId || ''}&classId=${task.classId || ''}`)}
+                          className="h-6 px-2 text-[9px] gap-1 bg-purple-600 hover:bg-purple-500 text-white"
+                        >
+                          <CalendarCheck className="h-2.5 w-2.5" /> Take Attendance
+                        </Button>
+                        <Badge variant={task.status === 'COMPLETED' ? 'success' : 'warning'} className="text-[9px]">
+                          {task.status}
+                        </Badge>
+                      </div>
                     </div>
                   ))}
                 </CardContent>
@@ -228,7 +249,7 @@ export const TeacherDashboardPage: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-xs">
-                  {(dashboard?.upcomingExams || []).map((exam) => (
+                  {(dashboard?.upcomingExams || []).map((exam: any) => (
                     <div
                       key={exam.id}
                       className="p-2.5 rounded-xl bg-gray-950/60 border border-gray-800 space-y-1"
@@ -252,7 +273,7 @@ export const TeacherDashboardPage: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {(dashboard?.activeAssignments || []).map((asgn) => (
+                {(dashboard?.activeAssignments || []).map((asgn: any) => (
                   <div
                     key={asgn.id}
                     className="p-3 rounded-2xl bg-gray-950/60 border border-gray-800 flex items-center justify-between text-xs"
@@ -280,7 +301,7 @@ export const TeacherDashboardPage: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-xs">
-                {(dashboard?.assignedClasses || []).map((cls) => (
+                {(dashboard?.assignedClasses || []).map((cls: any) => (
                   <div
                     key={cls.id}
                     className="p-3 rounded-2xl bg-gray-950/60 border border-gray-800 flex items-center justify-between hover:border-purple-500/30 transition-all"
@@ -293,7 +314,17 @@ export const TeacherDashboardPage: React.FC = () => {
                         </Badge>
                       )}
                     </div>
-                    <span className="text-purple-300 font-mono text-[10px] shrink-0">{cls.studentCount} Students</span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/attendance?sectionId=${cls.sectionId || cls.id}&classId=${cls.classId || ''}`)}
+                        className="h-6 px-2 text-[9px] gap-1 text-purple-300 hover:text-white"
+                      >
+                        <CalendarCheck className="h-2.5 w-2.5 text-purple-400" /> Take Roll
+                      </Button>
+                      <span className="text-purple-300 font-mono text-[10px] shrink-0">{cls.studentCount} Students</span>
+                    </div>
                   </div>
                 ))}
               </CardContent>

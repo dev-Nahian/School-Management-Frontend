@@ -26,14 +26,19 @@ export interface TeacherDashboardData {
     time: string;
     subject: string;
     className: string;
+    classId?: string;
     sectionName: string;
+    sectionId?: string;
     room: string;
     status: string;
   }[];
   assignedClasses: {
     id: string;
+    sectionId?: string;
+    classId?: string;
     name: string;
     studentCount: number;
+    isClassTeacher?: boolean;
   }[];
   assignedSubjects: {
     id: string;
@@ -42,6 +47,8 @@ export interface TeacherDashboardData {
   }[];
   attendanceTasks: {
     id: string;
+    sectionId?: string;
+    classId?: string;
     className: string;
     date: string;
     status: string;
