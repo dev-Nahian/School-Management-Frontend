@@ -89,19 +89,66 @@ export const AttendancePage: React.FC = () => {
 
   const teacherAssignedClasses = teacherDashboard?.assignedClasses || [];
 
-  // Auto-select assigned section for Teacher if none selected
+  // Derive allowed classes and sections strictly for teacher role
+  const teacherAssignedSectionIds = new Set(
+    teacherAssignedClasses.map((c: any) => c.sectionId || c.id).filter(Boolean)
+  );
+
+  const teacherAssignedClassIds = new Set(
+    teacherAssignedClasses.map((c: any) => c.classId).filter(Boolean)
+  );
+
+  sections.forEach((sec: any) => {
+    if (
+      teacherAssignedSectionIds.has(sec.id) ||
+      (user?.id && sec.classTeacherId === user.id) ||
+      teacherAssignedClasses.some(
+        (c: any) =>
+          c.name.toLowerCase().includes(`section ${sec.name.toLowerCase()}`) ||
+          c.name.toLowerCase().includes(sec.name.toLowerCase())
+      )
+    ) {
+      if (sec.classId) teacherAssignedClassIds.add(sec.classId);
+    }
+  });
+
+  const displayedClasses = isTeacher && teacherAssignedClasses.length > 0
+    ? classes.filter(
+        (cls) =>
+          teacherAssignedClassIds.has(cls.id) ||
+          teacherAssignedClasses.some((c: any) =>
+            c.name.toLowerCase().includes(cls.name.toLowerCase())
+          )
+      )
+    : classes;
+
+  const displayedSections = isTeacher && teacherAssignedClasses.length > 0
+    ? sections.filter(
+        (sec) =>
+          teacherAssignedSectionIds.has(sec.id) ||
+          (user?.id && sec.classTeacherId === user.id) ||
+          teacherAssignedClassIds.has(sec.classId) ||
+          teacherAssignedClasses.some((c: any) =>
+            c.name.toLowerCase().includes(sec.name.toLowerCase())
+          )
+      )
+    : sections;
+
+  // Auto-select assigned section and class for Teacher if none selected
   useEffect(() => {
-    if (isTeacher && !selectedSectionId && teacherAssignedClasses.length > 0) {
-      const firstSec = teacherAssignedClasses[0];
-      const targetSecId = firstSec.sectionId || firstSec.id;
-      if (targetSecId) {
-        setSelectedSectionId(targetSecId);
-        if (firstSec.classId) {
-          setSelectedClassId(firstSec.classId);
+    if (isTeacher && teacherAssignedClasses.length > 0) {
+      if (!selectedSectionId) {
+        const firstSec = teacherAssignedClasses[0];
+        const targetSecId = firstSec.sectionId || firstSec.id;
+        if (targetSecId) {
+          setSelectedSectionId(targetSecId);
         }
       }
+      if (!selectedClassId && displayedClasses.length > 0) {
+        setSelectedClassId(displayedClasses[0].id);
+      }
     }
-  }, [isTeacher, teacherAssignedClasses, selectedSectionId]);
+  }, [isTeacher, teacherAssignedClasses, displayedClasses, selectedSectionId, selectedClassId]);
 
   // Sync URL Params
   useEffect(() => {
@@ -220,8 +267,8 @@ export const AttendancePage: React.FC = () => {
   };
 
   const filteredSections = selectedClassId
-    ? sections.filter((sec) => sec.classId === selectedClassId)
-    : sections;
+    ? displayedSections.filter((sec) => sec.classId === selectedClassId)
+    : displayedSections;
 
   const handleSelectSection = (secId: string, clsId?: string) => {
     setSelectedSectionId(secId);
@@ -674,10 +721,16 @@ export const AttendancePage: React.FC = () => {
                         setSelectedClassId(e.target.value);
                         setSelectedSectionId('');
                       }}
-                      className="px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs"
+                      className="px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs font-semibold focus:border-purple-500 focus:outline-none"
                     >
-                      <option value="">All Classes</option>
-                      {classes.map((cls) => (
+                      {isTeacher ? (
+                        displayedClasses.length > 1 ? (
+                          <option value="">All My Classes ({displayedClasses.length})</option>
+                        ) : null
+                      ) : (
+                        <option value="">All Classes</option>
+                      )}
+                      {displayedClasses.map((cls) => (
                         <option key={cls.id} value={cls.id}>
                           {cls.name}
                         </option>
@@ -686,10 +739,12 @@ export const AttendancePage: React.FC = () => {
 
                     <select
                       value={selectedSectionId}
-                      onChange={(e) => handleSelectSection(e.target.value)}
-                      className="px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs font-semibold"
+                      onChange={(e) => handleSelectSection(e.target.value, selectedClassId)}
+                      className="px-3 py-2 rounded-xl bg-gray-950 border border-gray-800 text-white text-xs font-semibold focus:border-purple-500 focus:outline-none"
                     >
-                      <option value="">Select Section *</option>
+                      <option value="">
+                        {isTeacher ? 'Select Assigned Section *' : 'Select Section *'}
+                      </option>
                       {filteredSections.map((sec) => (
                         <option key={sec.id} value={sec.id}>
                           Section {sec.name}
