@@ -40,6 +40,8 @@ export const FinancePage: React.FC = () => {
   const queryClient = useQueryClient();
 
   const isFinanceAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'FINANCE';
+  const isParent = user?.role === 'PARENT';
+  const isStudent = user?.role === 'STUDENT';
 
   // Active View Tab
   const [viewTab, setViewTab] = useState<'invoices' | 'structures' | 'expenses' | 'payments'>('invoices');
@@ -485,12 +487,24 @@ export const FinancePage: React.FC = () => {
         {/* View Navigation Tabs & Global Search */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-3">
           <div className="flex items-center gap-2 overflow-x-auto">
-            {[
-              { id: 'invoices', label: `Invoices Ledger (${invoices.length})`, icon: FileText },
-              { id: 'structures', label: `Fee Structures (${feeStructures.length})`, icon: Layers },
-              { id: 'expenses', label: `Operational Expenses (${expenses.length})`, icon: TrendingDown },
-              { id: 'payments', label: 'Recent Receipts', icon: Receipt },
-            ].map((tab) => {
+            {(isFinanceAdmin
+              ? [
+                  { id: 'invoices', label: `Invoices Ledger (${invoices.length})`, icon: FileText },
+                  { id: 'structures', label: `Fee Structures (${feeStructures.length})`, icon: Layers },
+                  { id: 'expenses', label: `Operational Expenses (${expenses.length})`, icon: TrendingDown },
+                  { id: 'payments', label: 'Recent Receipts', icon: Receipt },
+                ]
+              : [
+                  {
+                    id: 'invoices',
+                    label: isParent
+                      ? `My Children's Invoices (${filteredInvoices.length})`
+                      : `My Invoices (${filteredInvoices.length})`,
+                    icon: FileText,
+                  },
+                  { id: 'payments', label: 'Payment Receipts', icon: Receipt },
+                ]
+            ).map((tab) => {
               const Icon = tab.icon;
               const isActive = viewTab === tab.id;
               return (

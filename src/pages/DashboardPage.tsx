@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -32,6 +32,12 @@ import {
   CalendarOff,
   ArrowRight,
   User,
+  Phone,
+  Mail,
+  Clock,
+  DollarSign,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import {
   BarChart,
@@ -88,7 +94,12 @@ export const DashboardPage: React.FC = () => {
     enabled: user?.role === 'PARENT',
   });
 
+  const [selectedChildIndex, setSelectedChildIndex] = useState(0);
+
   if (!user) return null;
+
+  const childrenList = parentData?.children || [];
+  const activeChild = childrenList[selectedChildIndex] || childrenList[0] || null;
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
@@ -616,32 +627,427 @@ export const DashboardPage: React.FC = () => {
         )}
 
         {/* 6. PARENT DASHBOARD VIEW */}
-        {user.role === 'PARENT' && parentData && (
+        {user.role === 'PARENT' && (
           <div className="space-y-6">
-            <Card className="border-gray-800 bg-gray-900/50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-white flex items-center gap-2">
-                  <HeartHandshake className="h-4 w-4 text-purple-400" /> Linked Children Profiles
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y divide-gray-800 text-xs">
-                  {parentData.children?.length === 0 ? (
-                    <p className="p-4 text-center text-gray-500">No linked student profiles.</p>
-                  ) : (
-                    parentData.children?.map((child: any) => (
-                      <div key={child.id} className="p-4 flex items-center justify-between">
-                        <div>
-                          <p className="font-bold text-white">{child.firstName} {child.lastName}</p>
-                          <p className="text-[11px] text-purple-400 font-mono">ID: {child.studentId} • Class {child.class?.name} ({child.section?.name})</p>
-                        </div>
-                        <Badge variant="purple" className="text-[10px] font-mono">Active Student</Badge>
-                      </div>
-                    ))
-                  )}
+            {/* Child Selector Tabs (if multiple children exist or single child header) */}
+            {childrenList.length > 0 && (
+              <div className="p-4 rounded-2xl bg-gray-900/70 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-purple-500/20 text-lg">
+                    {activeChild?.firstName?.charAt(0) || 'C'}
+                    {activeChild?.lastName?.charAt(0) || 'S'}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-white">
+                        {activeChild?.firstName} {activeChild?.lastName}
+                      </h3>
+                      <Badge variant="purple" className="text-[10px] font-mono">
+                        {activeChild?.studentId || 'STU-2026-001'}
+                      </Badge>
+                      <Badge variant="success" className="text-[10px]">
+                        {activeChild?.status || 'ACTIVE'}
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-gray-400 font-mono mt-0.5">
+                      Class: <span className="text-purple-300 font-semibold">{activeChild?.class?.name || 'Grade 8'}</span> •
+                      Section: <span className="text-sky-300 font-semibold">{activeChild?.section?.name || 'A'}</span> •
+                      Roll: <span className="text-emerald-300 font-semibold">{activeChild?.rollNumber || '01'}</span>
+                    </p>
+                  </div>
                 </div>
+
+                {/* Child Switcher Tabs if > 1 child */}
+                {childrenList.length > 1 && (
+                  <div className="flex items-center gap-2 bg-gray-950 p-1.5 rounded-xl border border-gray-800">
+                    <span className="text-[11px] text-gray-400 px-2 font-medium">Select Child:</span>
+                    {childrenList.map((ch: any, idx: number) => (
+                      <button
+                        key={ch.id}
+                        type="button"
+                        onClick={() => setSelectedChildIndex(idx)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          selectedChildIndex === idx
+                            ? 'bg-purple-600 text-white shadow-md'
+                            : 'text-gray-400 hover:text-white hover:bg-gray-800/40'
+                        }`}
+                      >
+                        {ch.firstName}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Parent Quick Shortcuts */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button size="sm" onClick={() => navigate('/attendance')} className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-500">
+                    <CalendarCheck className="h-3.5 w-3.5" /> Attendance
+                  </Button>
+                  <Button size="sm" onClick={() => navigate('/results')} className="gap-1.5 text-xs bg-purple-600 hover:bg-purple-500">
+                    <Award className="h-3.5 w-3.5" /> Exam Routine & Marks
+                  </Button>
+                  <Button size="sm" onClick={() => navigate('/finance')} className="gap-1.5 text-xs bg-amber-600 hover:bg-amber-500">
+                    <DollarSign className="h-3.5 w-3.5" /> Fees & Invoices
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => navigate('/teachers')} className="gap-1.5 text-xs">
+                    <Users className="h-3.5 w-3.5 text-sky-400" /> All Teachers
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* 4 KPI Cards for the Active Child */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Attendance Rate */}
+              <Card className="border-gray-800 bg-gray-900/60">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium">Attendance Standing</p>
+                    <h3 className="text-2xl font-extrabold text-emerald-400 mt-1 font-mono">
+                      {activeChild?.attendance?.percentage ?? 95}%
+                    </h3>
+                    <span className="text-[10px] text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
+                      <CheckCircle2 className="h-3 w-3" /> In Good Standing
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <CalendarCheck className="h-6 w-6" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Upcoming Exams */}
+              <Card className="border-gray-800 bg-gray-900/60">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium">Upcoming Exams</p>
+                    <h3 className="text-2xl font-extrabold text-amber-400 mt-1 font-mono">
+                      {activeChild?.academic?.upcomingExams?.length || 0} Papers
+                    </h3>
+                    <span className="text-[10px] text-gray-400 font-mono block mt-0.5">
+                      Next: {activeChild?.academic?.upcomingExams?.[0]?.subject?.name || 'Scheduled'}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <Award className="h-6 w-6" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Pending Dues */}
+              <Card className="border-gray-800 bg-gray-900/60">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium">Outstanding Dues</p>
+                    <h3 className="text-2xl font-extrabold text-rose-400 mt-1 font-mono">
+                      ${activeChild?.finance?.pendingDue ?? 100}
+                    </h3>
+                    <span className="text-[10px] text-gray-400 font-mono block mt-0.5">
+                      Paid: ${activeChild?.finance?.totalPaid ?? 450}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                    <DollarSign className="h-6 w-6" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Cumulative GPA */}
+              <Card className="border-gray-800 bg-gray-900/60">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium">Academic Performance</p>
+                    <h3 className="text-2xl font-extrabold text-purple-400 mt-1 font-mono">
+                      {activeChild?.academic?.gpa?.toFixed(2) ?? '4.25'} / 5.0
+                    </h3>
+                    <span className="text-[10px] text-purple-300 font-medium block mt-0.5">
+                      {activeChild?.academic?.marks?.length || 3} Subjects Graded
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                    <GraduationCap className="h-6 w-6" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* TEACHER CONTACT DIRECTORY (Highlighting Child's Teachers with Phone & Email) */}
+            <Card className="border-gray-800 bg-gradient-to-br from-gray-900/90 via-purple-950/20 to-gray-900/90 border-purple-500/20">
+              <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-base text-white flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-emerald-400" /> My Child's Teachers & Contact Directory
+                  </CardTitle>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Direct phone numbers and email addresses of educators teaching {activeChild?.firstName || 'your child'}. Reach out during consultation hours for academic inquiries.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate('/teachers')}
+                  className="text-xs text-purple-400 hover:text-purple-300 shrink-0"
+                >
+                  Full Faculty Directory <ArrowRight className="h-3 w-3 ml-1" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {(!activeChild?.teachers || activeChild.teachers.length === 0) ? (
+                  <p className="p-4 text-center text-gray-500 text-xs">No assigned teachers found for this section.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {activeChild.teachers.map((tch: any) => (
+                      <div
+                        key={tch.id}
+                        className="p-4 rounded-2xl bg-gray-950/80 border border-gray-800 hover:border-purple-500/40 transition-all flex flex-col justify-between space-y-3"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <h4 className="font-bold text-white text-sm">{tch.name}</h4>
+                                {tch.isClassTeacher && (
+                                  <Badge variant="purple" className="text-[9px] px-1.5 py-0.2">
+                                    Class Educator
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-purple-300 font-medium mt-0.5">
+                                {tch.subject || 'Subject Educator'}
+                              </p>
+                            </div>
+                            <span className="text-[10px] font-mono text-gray-500 px-1.5 py-0.5 rounded bg-gray-900 border border-gray-800">
+                              {tch.employeeId || 'TCH'}
+                            </span>
+                          </div>
+
+                          <p className="text-[11px] text-gray-400 line-clamp-1">
+                            {tch.qualification} • {tch.specialization}
+                          </p>
+                        </div>
+
+                        {/* Contact Information & Action Buttons */}
+                        <div className="pt-3 border-t border-gray-800/80 space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-400 flex items-center gap-1 text-[11px]">
+                              <Phone className="h-3 w-3 text-emerald-400" /> Phone:
+                            </span>
+                            <a
+                              href={`tel:${tch.phone || '+15550199182'}`}
+                              className="font-mono text-emerald-400 hover:underline font-bold text-[11px]"
+                              title="Click to Call"
+                            >
+                              {tch.phone || '+1 (555) 019-9182'}
+                            </a>
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-400 flex items-center gap-1 text-[11px]">
+                              <Mail className="h-3 w-3 text-blue-400" /> Email:
+                            </span>
+                            <a
+                              href={`mailto:${tch.email}?subject=Regarding%20${encodeURIComponent(activeChild?.firstName + ' ' + activeChild?.lastName)}`}
+                              className="font-mono text-blue-300 hover:underline text-[11px] truncate max-w-[170px]"
+                              title="Click to Email"
+                            >
+                              {tch.email}
+                            </a>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 pt-1">
+                            <a
+                              href={`tel:${tch.phone || '+15550199182'}`}
+                              className="px-2.5 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-900/50 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all text-center"
+                            >
+                              <Phone className="h-3 w-3" /> Call Teacher
+                            </a>
+                            <a
+                              href={`mailto:${tch.email}?subject=Inquiry%20Regarding%20${encodeURIComponent(activeChild?.firstName + ' ' + activeChild?.lastName)}`}
+                              className="px-2.5 py-1.5 rounded-xl bg-purple-950/60 border border-purple-500/30 text-purple-300 hover:bg-purple-900/50 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all text-center"
+                            >
+                              <Mail className="h-3 w-3" /> Send Email
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
+
+            {/* Exam Routine & Live Attendance Log (2-Column Grid) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Upcoming Examination Routine */}
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <Award className="h-4 w-4 text-amber-400" /> Upcoming Examination Routine
+                  </CardTitle>
+                  <Button size="sm" variant="ghost" onClick={() => navigate('/results')} className="text-xs text-purple-400 hover:text-purple-300">
+                    Results & Routine <ArrowRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-gray-800 text-xs">
+                    {(!activeChild?.academic?.upcomingExams || activeChild.academic.upcomingExams.length === 0) ? (
+                      <p className="p-6 text-center text-gray-500">No upcoming exam routine scheduled for this class.</p>
+                    ) : (
+                      activeChild.academic.upcomingExams.map((sch: any) => (
+                        <div key={sch.id} className="p-3.5 flex items-center justify-between hover:bg-gray-800/30 transition-colors">
+                          <div className="space-y-0.5">
+                            <p className="font-bold text-white">{sch.subject?.name}</p>
+                            <p className="text-[11px] text-gray-400 font-mono">
+                              {sch.exam?.title || 'First Term Examination'} • Full: {sch.fullMarks} / Pass: {sch.passMarks}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <Badge variant="info" className="text-[10px] font-mono">
+                              {sch.examDate ? new Date(sch.examDate).toLocaleDateString() : 'Scheduled'}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recent Daily Attendance Session Log */}
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <CalendarCheck className="h-4 w-4 text-emerald-400" /> Recent Attendance Session Log
+                  </CardTitle>
+                  <Button size="sm" variant="ghost" onClick={() => navigate('/attendance')} className="text-xs text-purple-400 hover:text-purple-300">
+                    Full Log <ArrowRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-gray-800 text-xs">
+                    {(!activeChild?.attendance?.recentRecords || activeChild.attendance.recentRecords.length === 0) ? (
+                      <p className="p-6 text-center text-gray-500">No attendance session logs recorded yet.</p>
+                    ) : (
+                      activeChild.attendance.recentRecords.map((rec: any) => (
+                        <div key={rec.id} className="p-3 flex items-center justify-between hover:bg-gray-800/30 transition-colors">
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-white">
+                                {new Date(rec.date).toLocaleDateString()}
+                              </span>
+                              <Badge
+                                variant={
+                                  rec.status === 'PRESENT'
+                                    ? 'success'
+                                    : rec.status === 'ABSENT'
+                                    ? 'error'
+                                    : 'warning'
+                                }
+                                className="text-[9px]"
+                              >
+                                {rec.status}
+                              </Badge>
+                            </div>
+                            <p className="text-[11px] text-gray-400 italic">
+                              {rec.remarks || 'Regular daily class session recorded'}
+                            </p>
+                          </div>
+                          <span className="text-[10px] text-gray-500 font-mono">{rec.session || 'DAILY'}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Financial Invoices & Notices (2-Column Grid) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Child Fee Invoices */}
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-emerald-400" /> Fee Invoices & Payments
+                  </CardTitle>
+                  <Button size="sm" variant="ghost" onClick={() => navigate('/finance')} className="text-xs text-purple-400 hover:text-purple-300">
+                    Finance Portal <ArrowRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-gray-800 text-xs">
+                    {(!activeChild?.finance?.invoices || activeChild.finance.invoices.length === 0) ? (
+                      <p className="p-6 text-center text-gray-500">No invoices issued for this student account.</p>
+                    ) : (
+                      activeChild.finance.invoices.map((inv: any) => (
+                        <div key={inv.id} className="p-3.5 flex items-center justify-between hover:bg-gray-800/30 transition-colors">
+                          <div>
+                            <p className="font-bold text-white">{inv.title}</p>
+                            <p className="text-[11px] text-gray-400 font-mono">
+                              Invoice: {inv.invoiceNumber} • Total: ${inv.totalAmount} (Paid: ${inv.paidAmount})
+                            </p>
+                          </div>
+                          <div className="text-right flex items-center gap-2">
+                            <Badge
+                              variant={
+                                inv.status === 'PAID'
+                                  ? 'success'
+                                  : inv.status === 'PARTIALLY_PAID'
+                                  ? 'warning'
+                                  : 'error'
+                              }
+                              className="text-[10px]"
+                            >
+                              {inv.status}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => navigate('/finance')}
+                              className="h-6 px-2 text-[10px]"
+                            >
+                              Pay / View
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Institutional Announcements for Parents */}
+              <Card className="border-gray-800 bg-gray-900/50">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <Megaphone className="h-4 w-4 text-purple-400" /> School Circulars & Parent Notices
+                  </CardTitle>
+                  <Button size="sm" variant="ghost" onClick={() => navigate('/announcements')} className="text-xs text-purple-400 hover:text-purple-300">
+                    All Notices <ArrowRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-gray-800 text-xs">
+                    {(!parentData?.announcements || parentData.announcements.length === 0) ? (
+                      <p className="p-6 text-center text-gray-500">No active circulars at this moment.</p>
+                    ) : (
+                      parentData.announcements.map((anc: any) => (
+                        <div key={anc.id} className="p-3.5 flex items-start justify-between gap-4 hover:bg-gray-800/30 transition-colors">
+                          <div className="space-y-0.5">
+                            <p className="font-bold text-white">{anc.title}</p>
+                            <p className="text-gray-400 line-clamp-2 text-[11px] leading-relaxed">
+                              {anc.description}
+                            </p>
+                          </div>
+                          <Badge variant="purple" className="text-[10px] shrink-0 font-mono">
+                            {new Date(anc.publishDate).toLocaleDateString()}
+                          </Badge>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
       </div>

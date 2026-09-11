@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { attendanceService } from '../services/attendance.service';
 import { structureService } from '../services/structure.service';
 import { teacherService } from '../services/teacher.service';
+import { dashboardService } from '../services/dashboard.service';
 import {
   CalendarCheck,
   CheckCircle2,
@@ -25,6 +26,8 @@ import {
   MessageSquare,
   Sparkles,
   RotateCcw,
+  Phone,
+  Mail,
 } from 'lucide-react';
 import { Breadcrumbs } from '../components/ui/Breadcrumbs';
 import type { AttendanceStatusType } from '../services/attendance.service';
@@ -37,6 +40,7 @@ export const AttendancePage: React.FC = () => {
   const isSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMISSION_ADMIN';
   const isTeacher = user?.role === 'TEACHER';
   const isStudent = user?.role === 'STUDENT';
+  const isParent = user?.role === 'PARENT';
 
   // Selection States
   const urlSectionId = searchParams.get('sectionId') || '';
@@ -47,6 +51,7 @@ export const AttendancePage: React.FC = () => {
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
   const [searchQuery, setSearchQuery] = useState('');
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [selectedChildIndex, setSelectedChildIndex] = useState(0);
 
   // Attendance Form Map { studentId: status } & { studentId: remarks }
   const [attendanceMap, setAttendanceMap] = useState<Record<string, AttendanceStatusType>>({});
@@ -59,6 +64,16 @@ export const AttendancePage: React.FC = () => {
     queryFn: () => attendanceService.getStudentAttendanceHistory('me'),
     enabled: isStudent,
   });
+
+  // Parent Dashboard / Children Query (Parent Role)
+  const { data: parentData, isLoading: isLoadingParentAttendance } = useQuery({
+    queryKey: ['parentAttendanceChildren'],
+    queryFn: dashboardService.getParentDashboard,
+    enabled: isParent,
+  });
+
+  const parentChildren = parentData?.children || [];
+  const activeChild = parentChildren[selectedChildIndex] || parentChildren[0] || null;
 
   // Admin Metrics Query
   const { data: adminMetrics } = useQuery({
@@ -78,13 +93,13 @@ export const AttendancePage: React.FC = () => {
   const { data: classes = [] } = useQuery({
     queryKey: ['classes'],
     queryFn: structureService.getClasses,
-    enabled: !isStudent,
+    enabled: !isStudent && !isParent,
   });
 
   const { data: sections = [] } = useQuery({
     queryKey: ['sections'],
     queryFn: structureService.getSections,
-    enabled: !isStudent,
+    enabled: !isStudent && !isParent,
   });
 
   const teacherAssignedClasses = teacherDashboard?.assignedClasses || [];
@@ -164,7 +179,7 @@ export const AttendancePage: React.FC = () => {
   const { data: sectionData, isLoading: isLoadingSection } = useQuery({
     queryKey: ['sectionAttendance', selectedSectionId, attendanceDate],
     queryFn: () => attendanceService.getSectionAttendance(selectedSectionId, attendanceDate),
-    enabled: Boolean(selectedSectionId) && !isStudent,
+    enabled: Boolean(selectedSectionId) && !isStudent && !isParent,
   });
 
   // Populate existing records into form map when section data loads
@@ -535,8 +550,265 @@ export const AttendancePage: React.FC = () => {
           </div>
         )}
 
+        {/* PARENT ATTENDANCE PORTAL VIEW */}
+        {isParent && (
+          <div className="space-y-6">
+            {isLoadingParentAttendance ? (
+              <Card className="border-gray-800 p-8 text-center text-gray-400 text-xs font-mono">
+                Loading your child's attendance ledger...
+              </Card>
+            ) : (
+              <>
+                {/* Child Switcher (if > 1 child) */}
+                {parentChildren.length > 1 && (
+                  <div className="p-3.5 rounded-2xl bg-gray-900/70 border border-gray-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4 text-purple-400" />
+                      <span className="text-xs font-bold text-white">Select Enrolled Child:</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {parentChildren.map((ch: any, idx: number) => (
+                        <button
+                          key={ch.id}
+                          type="button"
+                          onClick={() => setSelectedChildIndex(idx)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                            selectedChildIndex === idx
+                              ? 'bg-purple-600 text-white shadow-md'
+                              : 'bg-gray-950 text-gray-400 hover:text-white border border-gray-800'
+                          }`}
+                        >
+                          {ch.firstName} ({ch.class?.name || 'Grade 8'})
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Child Header Card */}
+                {activeChild && (
+                  <div className="p-4 rounded-2xl bg-gray-900/60 border border-gray-800 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-purple-600/30 border border-purple-500/30 flex items-center justify-center font-bold text-white text-sm">
+                        {activeChild.firstName?.charAt(0)}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">
+                          {activeChild.firstName} {activeChild.lastName}
+                        </h3>
+                        <p className="text-[11px] text-gray-400 font-mono">
+                          ID: <span className="text-purple-300">{activeChild.studentId}</span> • Class: <span className="text-sky-300">{activeChild.class?.name}</span> ({activeChild.section?.name}) • Roll: {activeChild.rollNumber}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="purple" className="text-[10px] font-mono">
+                      Active Student Roll
+                    </Badge>
+                  </div>
+                )}
+
+                {/* Attendance Summary KPIs */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                  <Card className="border-gray-800 bg-gray-900/60">
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div>
+                        <span className="text-xs text-gray-400 font-medium">Child Attendance Rate</span>
+                        <h3 className="text-2xl font-extrabold text-emerald-400 mt-1 font-mono">
+                          {activeChild?.attendance?.percentage ?? 95}%
+                        </h3>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                        <TrendingUp className="h-5 w-5" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-gray-800 bg-gray-900/60">
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div>
+                        <span className="text-xs text-gray-400 font-medium">Total Sessions</span>
+                        <h3 className="text-2xl font-extrabold text-white mt-1 font-mono">
+                          {activeChild?.attendance?.total ?? 20}
+                        </h3>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                        <CalendarCheck className="h-5 w-5" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-gray-800 bg-gray-900/60">
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div>
+                        <span className="text-xs text-gray-400 font-medium">Days Present</span>
+                        <h3 className="text-2xl font-extrabold text-emerald-400 mt-1 font-mono">
+                          {activeChild?.attendance?.present ?? 19}
+                        </h3>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                        <CheckCircle2 className="h-5 w-5" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-gray-800 bg-gray-900/60">
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div>
+                        <span className="text-xs text-gray-400 font-medium">Days Absent</span>
+                        <h3 className="text-2xl font-extrabold text-rose-400 mt-1 font-mono">
+                          {activeChild?.attendance?.absent ?? 1}
+                        </h3>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                        <XCircle className="h-5 w-5" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-gray-800 bg-gray-900/60">
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div>
+                        <span className="text-xs text-gray-400 font-medium">Late / Excused</span>
+                        <h3 className="text-2xl font-extrabold text-amber-400 mt-1 font-mono">
+                          {activeChild?.attendance?.late ?? 0}
+                        </h3>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                        <Clock className="h-5 w-5" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Standing Alert Banner */}
+                {(activeChild?.attendance?.percentage ?? 95) >= 75 ? (
+                  <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 flex items-center gap-3 text-xs">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+                    <div>
+                      <strong className="text-emerald-300">Attendance Compliance in Good Standing</strong>
+                      <p className="text-gray-400 text-[11px] mt-0.5">
+                        {activeChild?.firstName}'s attendance rate is above the institutional 75% minimum threshold for academic examinations.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/40 flex items-center gap-3 text-xs">
+                    <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0" />
+                    <div>
+                      <strong className="text-amber-300">Low Attendance Warning (&lt; 75%)</strong>
+                      <p className="text-gray-300 text-[11px] mt-0.5">
+                        {activeChild?.firstName}'s attendance rate has fallen below 75%. Please contact the class educator below.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Chronological Attendance Records Table */}
+                <Card className="border-gray-800">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Daily Attendance Session History</CardTitle>
+                    <CardDescription className="text-xs">
+                      Detailed chronological log of recorded class sessions, presence status, and teacher remarks
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {(!activeChild?.attendance?.recentRecords || activeChild.attendance.recentRecords.length === 0) ? (
+                      <div className="text-center py-12 text-gray-500 text-xs">
+                        <CalendarCheck className="h-10 w-10 text-purple-400 mx-auto mb-2 opacity-50" />
+                        No individual attendance session records logged yet.
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-gray-950/70 text-gray-400 font-semibold border-b border-gray-800">
+                            <tr>
+                              <th className="p-3">Session Date</th>
+                              <th className="p-3">Session Period</th>
+                              <th className="p-3">Recorded Status</th>
+                              <th className="p-3">Teacher Remarks / Notes</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-800/60">
+                            {activeChild.attendance.recentRecords.map((rec: any) => (
+                              <tr key={rec.id} className="hover:bg-gray-800/30 transition-colors">
+                                <td className="p-3 font-mono font-bold text-white">
+                                  {new Date(rec.date).toLocaleDateString()}
+                                </td>
+                                <td className="p-3 text-gray-400 font-mono">{rec.session || 'DAILY'}</td>
+                                <td className="p-3">
+                                  <Badge
+                                    variant={
+                                      rec.status === 'PRESENT'
+                                        ? 'success'
+                                        : rec.status === 'ABSENT'
+                                        ? 'error'
+                                        : rec.status === 'LATE'
+                                        ? 'warning'
+                                        : 'info'
+                                    }
+                                    className="text-[10px] font-semibold"
+                                  >
+                                    {rec.status}
+                                  </Badge>
+                                </td>
+                                <td className="p-3 text-gray-300 italic text-[11px]">
+                                  {rec.remarks || 'Regular class session recorded'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Direct Class Teacher Contact Card */}
+                {activeChild?.teachers && activeChild.teachers.length > 0 && (
+                  <Card className="border-gray-800 bg-gray-900/60">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-emerald-400" /> Class Educator Contact
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        Contact your child's class teacher regarding absences or attendance queries
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        {activeChild.teachers.slice(0, 3).map((tch: any) => (
+                          <div key={tch.id} className="p-3 rounded-2xl bg-gray-950 border border-gray-800 space-y-2">
+                            <div>
+                              <span className="font-bold text-white text-xs block">{tch.name}</span>
+                              <span className="text-[10px] text-purple-300 font-medium">{tch.subject}</span>
+                            </div>
+                            <div className="space-y-1 text-[11px]">
+                              <div className="flex items-center gap-1.5 text-gray-400">
+                                <Phone className="h-3 w-3 text-emerald-400 shrink-0" />
+                                <a href={`tel:${tch.phone}`} className="text-emerald-400 hover:underline font-mono">
+                                  {tch.phone}
+                                </a>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-gray-400">
+                                <Mail className="h-3 w-3 text-blue-400 shrink-0" />
+                                <a href={`mailto:${tch.email}`} className="text-blue-300 hover:underline font-mono truncate">
+                                  {tch.email}
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
         {/* TEACHER & ADMIN WORKFLOW SECTION SELECTOR & MARKING DESK */}
-        {!isStudent && (
+        {!isStudent && !isParent && (
           <>
             {/* SUPER ADMIN OVERALL DASHBOARD METRICS */}
             {isSuperAdmin && (

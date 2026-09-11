@@ -66,10 +66,10 @@ const navItems: NavItem[] = [
     roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE'],
   },
   {
-    title: 'Educator Workbench',
+    title: 'Teacher Directory & Contacts',
     href: '/teachers',
     icon: Users,
-    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE'],
+    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE', 'PARENT'],
   },
   {
     title: 'Attendance Desk',
@@ -78,7 +78,7 @@ const navItems: NavItem[] = [
     roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
   },
   {
-    title: 'Academic Results',
+    title: 'Academic Results & Exams',
     href: '/results',
     icon: Award,
     roles: ['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
@@ -111,13 +111,13 @@ const navItems: NavItem[] = [
     title: 'Library Desk',
     href: '/library',
     icon: Library,
-    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
+    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'STUDENT', 'FINANCE'],
   },
   {
     title: 'Leave Management',
     href: '/leave',
     icon: CalendarOff,
-    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE'],
+    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'STUDENT', 'FINANCE'],
   },
   {
     title: 'Reports Center',
@@ -129,7 +129,7 @@ const navItems: NavItem[] = [
     title: 'Document Vault',
     href: '/documents',
     icon: ShieldCheck,
-    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE', 'STUDENT', 'PARENT'],
+    roles: ['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE', 'STUDENT'],
   },
   {
     title: 'System Audit Logs',

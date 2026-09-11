@@ -110,12 +110,12 @@ export const AppRoutes: React.FC = () => {
           }
         />
 
-        {/* Teachers Portal */}
+        {/* Teachers Portal / Contact Directory */}
         <Route
           path="/teachers"
           element={
             <ProtectedRoute>
-              <RoleGuard allowedRoles={['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE']}>
+              <RoleGuard allowedRoles={['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE', 'PARENT']}>
                 <TeacherDashboardPage />
               </RoleGuard>
             </ProtectedRoute>
@@ -183,7 +183,7 @@ export const AppRoutes: React.FC = () => {
           path="/assignments"
           element={
             <ProtectedRoute>
-              <RoleGuard allowedRoles={['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE']}>
+              <RoleGuard allowedRoles={['SUPER_ADMIN', 'TEACHER', 'STUDENT']}>
                 <AssignmentPage />
               </RoleGuard>
             </ProtectedRoute>
@@ -219,7 +219,7 @@ export const AppRoutes: React.FC = () => {
           path="/library"
           element={
             <ProtectedRoute>
-              <RoleGuard allowedRoles={['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE']}>
+              <RoleGuard allowedRoles={['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'STUDENT', 'FINANCE']}>
                 <LibraryPage />
               </RoleGuard>
             </ProtectedRoute>
@@ -231,7 +231,7 @@ export const AppRoutes: React.FC = () => {
           path="/leave"
           element={
             <ProtectedRoute>
-              <RoleGuard allowedRoles={['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'FINANCE']}>
+              <RoleGuard allowedRoles={['SUPER_ADMIN', 'TEACHER', 'STUDENT', 'FINANCE']}>
                 <LeaveManagementPage />
               </RoleGuard>
             </ProtectedRoute>
@@ -255,7 +255,7 @@ export const AppRoutes: React.FC = () => {
           path="/documents"
           element={
             <ProtectedRoute>
-              <RoleGuard allowedRoles={['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE', 'STUDENT', 'PARENT']}>
+              <RoleGuard allowedRoles={['SUPER_ADMIN', 'ADMISSION_ADMIN', 'TEACHER', 'FINANCE', 'STUDENT']}>
                 <DocumentsPage />
               </RoleGuard>
             </ProtectedRoute>
